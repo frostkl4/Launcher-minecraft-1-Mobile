@@ -87,6 +87,7 @@ fun PetModelView(
     tapReaction: PetTapReaction = PetTapReaction.Squash,
     dragYaw: Boolean = true,
     gazeEnabled: Boolean = true,
+    maxFps: Int = 60,
 ) {
     val context = LocalContext.current
     val petController = remember {
@@ -101,6 +102,9 @@ fun PetModelView(
     }
     LaunchedEffect(petController, cape) {
         petController.setCape(cape)
+    }
+    LaunchedEffect(petController, maxFps) {
+        petController.setMaxFps(maxFps)
     }
     LaunchedEffect(petController, animation, animationSpeed) {
         if (animation != null) {

@@ -373,6 +373,8 @@ class MainActivity : BaseAppCompatActivity() {
                         launchGameViewModel = launchGameViewModel,
                         exitActivity = {
                             this@MainActivity.finish()
+                            //Noctis: give the launcher's memory to the game (game runs in its own process)
+                            com.movtery.zalithlauncher.noctis.NoctisLauncherRelease.releaseForGame(application)
                         },
                         ensureVulkanSupported = vulkanCheckerViewModel::ensureSupported,
                         submitError = {

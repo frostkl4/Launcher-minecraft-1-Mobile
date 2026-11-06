@@ -98,6 +98,9 @@ class PetController(
     }
     private var surfaceFailures = 0
     private var lastRenderNanos = 0L
+    // Noctis: per-preview frame cap (a small idle preview does not need 60+ fps)
+    @Volatile
+    private var minFrameIntervalNanos = MIN_FRAME_INTERVAL_NANOS
     private var lastSlowLogNanos = 0L
     private var attachedSurface: Surface? = null
     private val surfaceRef = AtomicReference<Surface?>(null)
@@ -167,6 +170,14 @@ class PetController(
      */
     fun setSuperSample(@FloatRange(0.5, 2.0) value: Float) {
         post { PetLibNative.nativeSetSuperSample(ptr, value) }
+    }
+
+    /**
+     * Noctis: maximum frames per second for this preview. Every frame is drawn on the CPU,
+     * so a lower cap means less CPU time taken away from the rest of the UI.
+     */
+    fun setMaxFps(fps: Int) {
+        minFrameIntervalNanos = 1_000_000_000L / fps.coerceIn(1, 240) * 9L / 10L
     }
 
     /**
@@ -416,7 +427,7 @@ class PetController(
 
         // 帧率上限：跳过的帧不推进计时基准，帧间隔随之累积，动画按真实时间推进不受采样率影响
         val startedNanos = System.nanoTime()
-        if (lastRenderNanos != 0L && startedNanos - lastRenderNanos < MIN_FRAME_INTERVAL_NANOS) {
+        if (lastRenderNanos != 0L && startedNanos - lastRenderNanos < minFrameIntervalNanos) {
             return
         }
 

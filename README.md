@@ -13,6 +13,9 @@ Launcher de **Minecraft: Java Edition para Android**, com tema noturno, layout p
 - **Ícone novo** em pixel art (lua crescente).
 - **Capas para contas offline**: arquivo PNG, Ely.by ou MinecraftCapes (servidas ao jogo pelo servidor de skins local + authlib-injector).
 - Busca do CurseForge respeita o limite da API (só os primeiros 10.000 resultados de cada busca) e avisa quando falta a chave de API; sem a chave, as abas de download abrem no Modrinth.
+- **Perfil de JVM automático**: G1GC com meta de pausa de 50 ms e teto seguro de RAM conforme a memória do celular (tudo registrado no log do jogo, seção "Noctis JVM Profile"). Argumentos de GC próprios do usuário têm prioridade.
+- **Launcher libera a memória enquanto o jogo roda**: o jogo fica num processo separado; depois que ele abre, o processo do launcher é encerrado (se não houver download em andamento).
+- Prévia 3D da skin na tela inicial limitada a 30 fps para usar menos CPU.
 - Não oferece as atualizações do Zalith oficial (é outro app).
 
 O motor do jogo (PojavLauncher/LWJGL/renderizadores), contas, downloads (Modrinth/CurseForge), mods e controles continuam sendo os do Zalith Launcher 2.

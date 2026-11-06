@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -43,7 +44,11 @@ import kotlin.math.min
 @Composable
 fun NoctisSkyBackground(modifier: Modifier = Modifier) {
     Spacer(
-        modifier = modifier.drawWithCache {
+        // Own layer: the sky is recorded once and reused, instead of being re-recorded
+        // every time something above it redraws
+        modifier = modifier
+            .graphicsLayer()
+            .drawWithCache {
             val w = size.width
             val h = size.height
             val pixel = 2.dp.toPx()

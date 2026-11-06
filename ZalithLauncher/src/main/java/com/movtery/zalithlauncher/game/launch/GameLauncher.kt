@@ -228,7 +228,21 @@ class GameLauncher(
     }
 
     override fun progressFinalUserArgs(args: MutableList<String>, ramAllocation: Int) {
-        super.progressFinalUserArgs(args, version.getRamAllocation(activity))
+        //Noctis: hardware-aware heap ceiling, initial heap and garbage-collector flags
+        val profile = NoctisJvmProfile.build(
+            context = activity,
+            requestedMb = version.getRamAllocation(activity),
+            runtime = runtime,
+            currentArgs = args
+        )
+        super.progressFinalUserArgs(args, profile.heapMb)
+        if (profile.initialHeapMb != profile.heapMb) {
+            args.purgeArg("-Xms")
+            args.add("-Xms${profile.initialHeapMb}M")
+        }
+        args.addAll(profile.extraArgs)
+        appendTitle("Noctis JVM Profile")
+        profile.logLines.forEach { appendInfo(it) }
         if (Renderers.isCurrentRendererValid()) {
             args.add("-Dorg.lwjgl.opengl.libname=${getGameRendererLibrary(version, configuredRenderer)}")
         }

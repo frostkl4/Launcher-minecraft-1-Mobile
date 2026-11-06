@@ -251,6 +251,8 @@ private fun SkinPreview(
         animation = PetAnimation.Idle,
         tapReaction = PetTapReaction.Interact,
         dragYaw = true,
-        gazeEnabled = false
+        gazeEnabled = false,
+        // Idle breathing looks the same at 30 fps and costs half the CPU of 60
+        maxFps = 30
     )
 }
