@@ -21,6 +21,7 @@ package com.movtery.zalithlauncher.game.launch
 import android.content.Context
 import android.os.Build
 import android.os.LocaleList
+import android.os.Process
 import android.system.Os
 import android.util.ArrayMap
 import androidx.annotation.CallSuper
@@ -195,9 +196,33 @@ abstract class Launcher(
         ZLBridge.initializeGameExitHook()
         ZLBridge.chdir(chdir())
 
-        val exitCode = VMLauncher.launchJVM(args.toTypedArray())
+        val exitCode = withGameThreadPriority { VMLauncher.launchJVM(args.toTypedArray()) }
         LoggerBridge.append("Java Exit code: $exitCode")
         return exitCode
+    }
+
+    /**
+     * Noctis: CPU priority (Android "nice" value) for the thread that starts the JVM.
+     * Threads created by the JVM (render thread, chunk workers, GC) inherit it.
+     * Null keeps the default. Real-time scheduling is not available to apps.
+     */
+    protected open val gameThreadPriority: Int? = null
+
+    private inline fun <T> withGameThreadPriority(block: () -> T): T {
+        val target = gameThreadPriority ?: return block()
+        val tid = Process.myTid()
+        val previous = runCatching { Process.getThreadPriority(tid) }.getOrNull()
+        val applied = runCatching { Process.setThreadPriority(target) }.isSuccess
+        LoggerBridge.appendInfo(
+            if (applied) "Noctis: game thread priority $target (was $previous)"
+            else "Noctis: Android did not allow a higher game thread priority, keeping the default"
+        )
+        try {
+            return block()
+        } finally {
+            // This thread belongs to a shared pool: give it back its normal priority
+            if (applied && previous != null) runCatching { Process.setThreadPriority(previous) }
+        }
     }
 
     /**

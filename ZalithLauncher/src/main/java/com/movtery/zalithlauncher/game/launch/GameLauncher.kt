@@ -103,6 +103,9 @@ class GameLauncher(
         offlineServer.stop()
     }
 
+    //Noctis: the game gets a higher CPU priority than normal app threads (still below system UI)
+    override val gameThreadPriority: Int? = android.os.Process.THREAD_PRIORITY_DISPLAY
+
     override suspend fun launch(screenSize: IntSize): Int {
         if (!Renderers.isCurrentRendererValid()) {
             Renderers.setCurrentRenderer(version.getRenderer())
@@ -521,6 +524,11 @@ private fun setRendererEnv(
         // Mesa 系渲染器的 OSMesa 桥依据该变量定位 Mesa 库
         envMap["LIB_MESA_NAME"] = getRendererLibrary() ?: "null"
         envMap["MESA_GLSL_CACHE_DIR"] = PathManager.DIR_CACHE.absolutePath
+        //Noctis: newer Mesa only reads MESA_SHADER_CACHE_DIR. Same folder, so compiled shaders
+        //(and Zink's Vulkan pipelines) are reused across sessions: the "first time" stutter
+        //of a new block/effect only happens once.
+        envMap["MESA_SHADER_CACHE_DIR"] = PathManager.DIR_CACHE.absolutePath
+        envMap["MESA_SHADER_CACHE_DISABLE"] = "false"
     }
 
     if (renderer.needsZinkDriverOverride) {

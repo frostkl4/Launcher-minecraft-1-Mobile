@@ -39,6 +39,24 @@ import kotlin.math.roundToInt
  */
 object NoctisJvmProfile {
 
+    /**
+     * Phone class by the RAM Android reports (a bit less than the box: a "4 GB" phone
+     * reports about 3.6–3.8 GB, a "6 GB" one about 5.5 GB).
+     *
+     * | Tier | Phones      | Java heap ceiling        | Start heap | G1 region | Idle heap given back |
+     * |------|-------------|--------------------------|------------|-----------|----------------------|
+     * | LOW  | 2–3 GB      | 1024 MB (2 GB) / 1280 MB | half       | 4 MB      | yes (Java 17+)       |
+     * | MID  | 4 GB        | 1792 MB                  | half       | 4–8 MB    | yes (Java 17+)       |
+     * | HIGH | 6 GB or more| 3 GB (6) / 4 GB (8) / 55%| full       | 8–16 MB   | no                   |
+     */
+    enum class Tier { LOW, MID, HIGH }
+
+    private fun tierOf(totalMb: Int, lowRamFlag: Boolean): Tier = when {
+        lowRamFlag || totalMb < 3072 -> Tier.LOW
+        totalMb < 5120 -> Tier.MID
+        else -> Tier.HIGH
+    }
+
     /** What the profile decided for one launch. */
     class Result(
         val heapMb: Int,
@@ -53,8 +71,10 @@ object NoctisJvmProfile {
         val lowRamFlag: Boolean,
         val cores: Int
     ) {
-        /** "Weak phone" = 4 GB or less (phones report a bit less than the box says) or flagged low-RAM by Android. */
-        val isWeak: Boolean get() = lowRamFlag || totalMb < 4096
+        val tier: Tier get() = tierOf(totalMb, lowRamFlag)
+
+        /** LOW and MID phones start with a smaller heap and give idle memory back. */
+        val isWeak: Boolean get() = tier != Tier.HIGH
     }
 
     /**
@@ -119,7 +139,7 @@ object NoctisJvmProfile {
         val is64Bit = runtime.arch?.contains("64") ?: Architecture.is64BitsDevice
 
         log += "Noctis JVM profile: device RAM ${device.totalMb} MB, available now ${device.availableMb} MB, " +
-                "${device.cores} cores, ${if (device.isWeak) "weak-phone mode" else "normal mode"}, " +
+                "${device.cores} cores, tier ${device.tier}${if (device.isWeak) " (weak-phone mode)" else ""}, " +
                 "Java ${runtime.javaVersion}, ${if (is64Bit) "64" else "32"}-bit"
 
         // 1) Heap ceiling
@@ -160,7 +180,9 @@ object NoctisJvmProfile {
                     // Mods that call System.gc() get a background cycle instead of a full freeze
                     "-XX:+ExplicitGCInvokesConcurrent",
                     // Fewer duplicate strings in memory (helps big modpacks)
-                    "-XX:+UseStringDeduplication"
+                    "-XX:+UseStringDeduplication",
+                    // No shared-memory stats file (hsperfdata): one less file the JVM keeps writing
+                    "-XX:+PerfDisableSharedMem"
                 )
                 if (device.isWeak && runtime.javaVersion >= 17) {
                     // When the game is idle (menus, paused) give unused heap back to Android
