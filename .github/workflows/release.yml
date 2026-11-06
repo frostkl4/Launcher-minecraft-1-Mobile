@@ -259,6 +259,9 @@ jobs:
           if gh release view "$TAG" -R "$REPO" >/dev/null 2>&1; then
             # Release already made by hand on the website: just add (or replace) the files
             gh release upload "$TAG" dist/*.apk dist/SHA256SUMS.txt -R "$REPO" --clobber
+            # ...and fill in the description if it was left empty
+            body=$(gh release view "$TAG" -R "$REPO" --json body -q .body)
+            [ -n "$body" ] || gh release edit "$TAG" -R "$REPO" --notes-file notes.md
           else
             gh release create "$TAG" dist/*.apk dist/SHA256SUMS.txt -R "$REPO" \
               --verify-tag \
