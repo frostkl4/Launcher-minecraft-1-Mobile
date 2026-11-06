@@ -132,14 +132,13 @@ Secrets do repositório em **Settings → Secrets and variables → Actions**:
 
 | Secret | Obrigatório | Para quê |
 |---|---|---|
-| `NOCTIS_KEYSTORE_BASE64` | Sim | Chave de assinatura (PKCS12) em Base64 |
-| `NOCTIS_KEYSTORE_PASSWORD` | Sim | Senha da chave |
+| `NOCTIS_KEYSTORE_PASSWORD` | Sim | Senha da chave de assinatura (`signing/noctis-release.p12`) |
 | `OAUTH_CLIENT_ID` | Para login Microsoft | ID de um app registrado no Azure com acesso à API do Minecraft |
 | `CURSEFORGE_API_KEY` | Não | Chave do CurseForge embutida no app |
 
 Para publicar: crie a tag `v0.1.0` (pela página de Releases ou por git) e o workflow faz o resto. Em **Actions → Release → Run workflow**, a opção *Only test the build* testa a compilação com uma chave temporária, sem publicar nada.
 
-**Nunca** envie a chave de assinatura nem a senha para o repositório: com elas, qualquer pessoa poderia publicar uma "atualização" falsa do app.
+A chave de assinatura fica no repositório trancada pela senha. **Nunca** publique a senha: com ela, qualquer pessoa poderia assinar uma "atualização" falsa do app.
 
 </details>
 

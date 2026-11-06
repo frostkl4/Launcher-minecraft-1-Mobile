@@ -8,9 +8,10 @@
 #   - Actions → Release → Run workflow, and type the tag.
 #     "Only test the build" builds both APKs with a temporary key and publishes nothing.
 #
-# Repository secrets needed (Settings → Secrets and variables → Actions):
-#   NOCTIS_KEYSTORE_BASE64    the release keystore (PKCS12) encoded in Base64
-#   NOCTIS_KEYSTORE_PASSWORD  its password
+# Signing: the release keystore is signing/noctis-release.p12 (PKCS12, locked by
+# a strong password). Repository secret needed (Settings → Secrets and variables → Actions):
+#   NOCTIS_KEYSTORE_PASSWORD  the keystore password (keep it secret!)
+# Forks without the file can pass the keystore as NOCTIS_KEYSTORE_BASE64 instead.
 # Optional: OAUTH_CLIENT_ID (Microsoft login), CURSEFORGE_API_KEY.
 
 name: Release
@@ -108,21 +109,30 @@ jobs:
               -storepass "$password" -keypass "$password" \
               -dname "CN=Noctis Launcher test build" >/dev/null
           else
-            if [ -z "$NOCTIS_KEYSTORE_BASE64" ] || [ -z "$NOCTIS_KEYSTORE_PASSWORD" ]; then
-              echo "::error::Faltam os secrets NOCTIS_KEYSTORE_BASE64 e/ou NOCTIS_KEYSTORE_PASSWORD (Settings → Secrets and variables → Actions)."
-              exit 1
-            fi
-            # Keep only Base64 characters: spaces and line breaks added when pasting on a phone are dropped
-            clean=$(printf '%s' "$NOCTIS_KEYSTORE_BASE64" | tr -cd 'A-Za-z0-9+/=')
-            echo "NOCTIS_KEYSTORE_BASE64: ${#clean} caracteres Base64 (de ${#NOCTIS_KEYSTORE_BASE64} colados)."
-            if [ $(( ${#clean} % 4 )) -ne 0 ] || ! printf '%s' "$clean" | base64 --decode > "$keystore" 2>/dev/null; then
-              echo "::error::O secret NOCTIS_KEYSTORE_BASE64 está incompleto ou tem texto a mais (${#clean} caracteres Base64). Abra o arquivo NOCTIS_KEYSTORE_BASE64.txt, copie TUDO e cole de novo no secret."
+            if [ -z "$NOCTIS_KEYSTORE_PASSWORD" ]; then
+              echo "::error::Falta o secret NOCTIS_KEYSTORE_PASSWORD (Settings → Secrets and variables → Actions)."
               exit 1
             fi
             password=$(printf '%s' "$NOCTIS_KEYSTORE_PASSWORD" | tr -d '[:space:]')
             echo "NOCTIS_KEYSTORE_PASSWORD: ${#password} caracteres."
+            if [ -f signing/noctis-release.p12 ]; then
+              # The keystore in the repository is locked by the password secret
+              cp signing/noctis-release.p12 "$keystore"
+            elif git fetch --quiet --depth=1 origin "${{ github.event.repository.default_branch }}" &&
+                 git cat-file -e FETCH_HEAD:signing/noctis-release.p12 2>/dev/null; then
+              # Tags made before the keystore was added: take it from the main branch
+              git show FETCH_HEAD:signing/noctis-release.p12 > "$keystore"
+            else
+              # Forks without the file can pass the whole keystore as a Base64 secret
+              clean=$(printf '%s' "$NOCTIS_KEYSTORE_BASE64" | tr -cd 'A-Za-z0-9+/=')
+              echo "NOCTIS_KEYSTORE_BASE64: ${#clean} caracteres Base64."
+              if [ -z "$clean" ] || [ $(( ${#clean} % 4 )) -ne 0 ] || ! printf '%s' "$clean" | base64 --decode > "$keystore" 2>/dev/null; then
+                echo "::error::Sem signing/noctis-release.p12 e o secret NOCTIS_KEYSTORE_BASE64 está vazio ou incompleto."
+                exit 1
+              fi
+            fi
             if ! keytool -list -storetype PKCS12 -keystore "$keystore" -storepass "$password" -alias noctis >/dev/null 2>&1; then
-              echo "::error::A chave não abriu: confira se os dois secrets foram colados inteiros e sem espaços."
+              echo "::error::A senha não abriu a chave: confira se o secret NOCTIS_KEYSTORE_PASSWORD tem exatamente a senha de 32 caracteres, sem nada a mais."
               exit 1
             fi
           fi
