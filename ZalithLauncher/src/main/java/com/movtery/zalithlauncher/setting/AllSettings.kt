@@ -378,6 +378,12 @@ object AllSettings : SettingsRegistry() {
 
     //Launcher
     /**
+     * Noctis: CurseForge API key pasted by the user. Stays on this device only,
+     * so it never ends up in the public repository or inside the APK.
+     */
+    val curseForgeApiKey = stringSetting("noctisCurseForgeApiKey", "")
+
+    /**
      * 颜色主题色
      * Android 12+ 默认动态主题色
      */

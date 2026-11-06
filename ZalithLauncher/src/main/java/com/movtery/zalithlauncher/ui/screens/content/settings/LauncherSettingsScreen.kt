@@ -18,6 +18,8 @@
 
 package com.movtery.zalithlauncher.ui.screens.content.settings
 
+import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.TextInputSettingsCard
+import androidx.compose.ui.platform.LocalUriHandler
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.animation.AnimatedVisibility
@@ -321,6 +323,32 @@ fun LauncherSettingsScreen(
                             }
                         )
                     }
+                }
+            }
+
+            //Noctis: CurseForge API key pasted on the phone
+            AnimatedItem { ctx ->
+                SettingsCardColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .animated(ctx)
+                ) {
+                    val uriHandler = LocalUriHandler.current
+                    TextInputSettingsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        position = CardPosition.Top,
+                        unit = AllSettings.curseForgeApiKey,
+                        title = stringResource(R.string.noctis_settings_curseforge_key_title),
+                        summary = stringResource(R.string.noctis_settings_curseforge_key_summary),
+                        label = stringResource(R.string.noctis_settings_curseforge_key_label)
+                    )
+                    SettingsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        position = CardPosition.Bottom,
+                        title = stringResource(R.string.noctis_settings_curseforge_key_get_title),
+                        summary = stringResource(R.string.noctis_settings_curseforge_key_get_summary),
+                        onClick = { uriHandler.openUri("https://console.curseforge.com/") }
+                    )
                 }
             }
 

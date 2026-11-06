@@ -34,8 +34,8 @@
     <string name="noctis_home_change_skin">Trocar skin</string>
 
     <!-- CurseForge -->
-    <string name="noctis_curseforge_key_missing">O CurseForge não funciona nesta versão porque ela foi compilada sem chave de API. Adicione o secret CURSEFORGE_API_KEY no repositório do GitHub e compile de novo. O Modrinth funciona sem chave</string>
-    <string name="noctis_curseforge_key_rejected">O CurseForge recusou a chave de API (403). Confira o secret CURSEFORGE_API_KEY no repositório do GitHub</string>
+    <string name="noctis_curseforge_key_missing">O CurseForge precisa de uma chave de API. Crie uma grátis em console.curseforge.com e cole em Configurações → Launcher → Chave de API do CurseForge</string>
+    <string name="noctis_curseforge_key_rejected">O CurseForge recusou a chave de API (403). Confira a chave em Configurações → Launcher → Chave de API do CurseForge</string>
 
     <!-- Capas offline -->
     <string name="noctis_offline_cape">Capa</string>
@@ -50,4 +50,11 @@
     <string name="noctis_offline_cape_error_not_found">Jogador não encontrado nesse serviço.</string>
     <string name="noctis_offline_cape_error_invalid">Imagem inválida: a capa precisa ter o dobro de largura em relação à altura (ex.: 64×32).</string>
     <string name="noctis_offline_cape_error_network">Não foi possível conectar. Verifique a internet e tente de novo.</string>
+
+    <!-- Chave do CurseForge nas configurações -->
+    <string name="noctis_settings_curseforge_key_title">Chave de API do CurseForge</string>
+    <string name="noctis_settings_curseforge_key_summary">Necessária para buscar e baixar do CurseForge. Fica salva só neste aparelho.</string>
+    <string name="noctis_settings_curseforge_key_label">Cole a chave aqui</string>
+    <string name="noctis_settings_curseforge_key_get_title">Pegar uma chave grátis</string>
+    <string name="noctis_settings_curseforge_key_get_summary">Abre o console.curseforge.com: entre, aceite os termos da API e crie uma chave (API key)</string>
 </resources>

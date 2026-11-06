@@ -21,20 +21,28 @@ package com.movtery.zalithlauncher.game.download.addon.platform.curseforge
 
 import com.movtery.zalithlauncher.BuildKeys
 import com.movtery.zalithlauncher.game.download.addon.platform.Platform
+import com.movtery.zalithlauncher.setting.AllSettings
 import io.ktor.client.plugins.ResponseException
 import io.ktor.http.HttpStatusCode
 
 /**
  * The official CurseForge API answers every request without a valid key with
- * "403 Forbidden: API Key missing or invalid". The key is baked in at build time
- * from the CURSEFORGE_API_KEY repository secret.
+ * "403 Forbidden: API Key missing or invalid". The key comes from Settings → Launcher
+ * or, as a fallback, from the CURSEFORGE_API_KEY repository secret at build time.
  */
 class CurseForgeApiKeyMissingException :
-    IllegalStateException("CurseForge API key is not set (CURSEFORGE_API_KEY secret)")
+    IllegalStateException("CurseForge API key is not set")
 
-/** True when this build was compiled without a CurseForge API key. */
+/**
+ * Key used for CurseForge requests: the one pasted in Settings → Launcher wins,
+ * otherwise the one compiled in from the CURSEFORGE_API_KEY secret (may be empty).
+ */
+fun currentCurseForgeApiKey(): String =
+    AllSettings.curseForgeApiKey.getValue().trim().ifBlank { BuildKeys.CURSEFORGE_API }
+
+/** True when there is no CurseForge API key at all. */
 val isCurseForgeApiKeyMissing: Boolean
-    get() = BuildKeys.CURSEFORGE_API.isBlank()
+    get() = currentCurseForgeApiKey().isBlank()
 
 /**
  * Fails fast with a clear error instead of sending a request that can only return 403.

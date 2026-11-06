@@ -34,8 +34,8 @@
     <string name="noctis_home_change_skin">Change skin</string>
 
     <!-- CurseForge -->
-    <string name="noctis_curseforge_key_missing">CurseForge does not work in this build: it was compiled without an API key. Add the CURSEFORGE_API_KEY secret to the GitHub repository and build again. Modrinth works without a key</string>
-    <string name="noctis_curseforge_key_rejected">CurseForge refused the API key (403). Check the CURSEFORGE_API_KEY secret in the GitHub repository</string>
+    <string name="noctis_curseforge_key_missing">CurseForge needs an API key. Create a free one at console.curseforge.com and paste it in Settings → Launcher → CurseForge API key</string>
+    <string name="noctis_curseforge_key_rejected">CurseForge refused the API key (403). Check the key in Settings → Launcher → CurseForge API key</string>
 
     <!-- Offline capes -->
     <string name="noctis_offline_cape">Cape</string>
@@ -50,4 +50,11 @@
     <string name="noctis_offline_cape_error_not_found">Player not found on that service.</string>
     <string name="noctis_offline_cape_error_invalid">Invalid image: a cape must be twice as wide as it is tall (e.g. 64×32).</string>
     <string name="noctis_offline_cape_error_network">Could not connect. Check your internet and try again.</string>
+
+    <!-- CurseForge key in settings -->
+    <string name="noctis_settings_curseforge_key_title">CurseForge API key</string>
+    <string name="noctis_settings_curseforge_key_summary">Needed to search and download from CurseForge. Saved only on this device.</string>
+    <string name="noctis_settings_curseforge_key_label">Paste the key here</string>
+    <string name="noctis_settings_curseforge_key_get_title">Get a free key</string>
+    <string name="noctis_settings_curseforge_key_get_summary">Opens console.curseforge.com: sign in, accept the API terms and create an API key</string>
 </resources>

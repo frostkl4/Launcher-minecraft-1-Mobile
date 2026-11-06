@@ -32,9 +32,9 @@ Para outras arquiteturas, edite a lista `archs` em `.github/workflows/push_ci.ym
 | Secret | Para quê |
 |---|---|
 | `OAUTH_CLIENT_ID` | Login com conta Microsoft (ID de um app registrado no Azure) |
-| `CURSEFORGE_API_KEY` | Busca e downloads do CurseForge |
+| `CURSEFORGE_API_KEY` | Busca e downloads do CurseForge (opcional: dá para colar a chave no próprio app) |
 
-Sem elas o app compila, mas o login Microsoft e o CurseForge não funcionam (o CurseForge responde "403 API Key missing").
+Sem elas o app compila, mas o login Microsoft não funciona. O CurseForge funciona se você colar uma chave em **Configurações → Launcher → Chave de API do CurseForge** (crie uma grátis em console.curseforge.com); a chave fica salva só no aparelho.
 
 ## Licença
 
