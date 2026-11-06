@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Textos adicionados pelo Noctis Launcher (versão modificada não oficial do Zalith Launcher 2). -->
+<resources>
+    <string name="noctis_theme_name">Noctis</string>
+    <string name="noctis_unofficial_badge">Versão modificada não oficial</string>
+    <string name="noctis_unofficial_based_on">Versão modificada não oficial do %1$s</string>
+    <string name="noctis_upstream_credit">Projeto original de MovTery e colaboradores (GPL-3.0). O Noctis Launcher é construído em cima dele.</string>
+
+    <string name="noctis_rail_home">Início</string>
+    <string name="noctis_rail_files">Arquivos</string>
+    <string name="noctis_rail_back">Voltar</string>
+    <string name="noctis_rail_tasks">Tarefas</string>
+
+    <string name="noctis_home_play">Jogar</string>
+    <string name="noctis_home_no_instance">Nenhuma instância selecionada</string>
+    <string name="noctis_home_library">Biblioteca</string>
+    <string name="noctis_home_search">Buscar instâncias</string>
+    <string name="noctis_home_clear_search">Limpar busca</string>
+    <string name="noctis_home_new_instance">Nova instância</string>
+    <string name="noctis_home_memory">Memória</string>
+    <string name="noctis_home_memory_value">%1$s de %2$s</string>
+    <string name="noctis_home_memory_high">Alta: sobra pouca memória para o sistema e outros apps</string>
+    <string name="noctis_home_memory_instance">Esta instância usa a própria configuração de memória (%1$s)</string>
+    <string name="noctis_home_empty_library">Nenhuma instância ainda. Toque em Nova instância para instalar o Minecraft.</string>
+    <string name="noctis_home_no_results">Nada encontrado para \"%1$s\"</string>
+    <string name="noctis_home_loading">Carregando instâncias…</string>
+    <string name="noctis_home_selected">Selecionada</string>
+    <string name="noctis_home_instance_options">Configurar instância</string>
+    <string name="noctis_home_hold_hint">Toque para selecionar, segure para configurar</string>
+
+    <string name="noctis_home_accounts">Contas</string>
+    <string name="noctis_home_no_account">Sem conta</string>
+    <string name="noctis_home_add_account">Adicionar conta</string>
+    <string name="noctis_home_change_skin">Trocar skin</string>
+</resources>

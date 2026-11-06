@@ -7,6 +7,11 @@ on:
       variant:
         required: true
         type: string
+      archs:
+        description: JSON list of architectures to build
+        required: false
+        type: string
+        default: '["all", "arm", "arm64", "x86", "x86_64"]'
     secrets:
       KEY_PASSWORD:
         required: false
@@ -23,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        arch: ["all", "arm", "arm64", "x86", "x86_64"]
+        arch: ${{ fromJSON(inputs.archs || '["all", "arm", "arm64", "x86", "x86_64"]') }}
       fail-fast: false
 
     env:

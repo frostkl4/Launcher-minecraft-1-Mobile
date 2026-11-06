@@ -225,7 +225,9 @@ class MainActivity : BaseAppCompatActivity() {
         NotificationManager.initManager(this)
 
         //检查更新
-        if (!isImporting && launcherUpgradeViewModel.operation == LauncherUpgradeOperation.None) {
+        // Noctis: the update feed belongs to the official Zalith Launcher 2, so an
+        // unofficial build must not offer it as an "update" on start.
+        if (com.movtery.zalithlauncher.noctis.NoctisInfo.CHECK_UPSTREAM_UPDATES_ON_START && !isImporting && launcherUpgradeViewModel.operation == LauncherUpgradeOperation.None) {
             lifecycleScope.launch {
                 launcherUpgradeViewModel.checkOnAppStart()
             }

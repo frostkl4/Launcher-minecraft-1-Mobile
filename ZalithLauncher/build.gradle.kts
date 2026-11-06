@@ -129,8 +129,8 @@ android {
     }
 
     defaultConfig {
-        applicationId = zalithPackageName
-        applicationIdSuffix = ".v2"
+        // Noctis: own application id so it installs side by side with the official app
+        applicationId = "io.github.frostkl4.noctis"
         minSdk = 26
         targetSdk = 34
         versionCode = launcherVersionCode

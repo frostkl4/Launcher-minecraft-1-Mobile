@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Strings added by Noctis Launcher (unofficial modified version of Zalith Launcher 2). -->
+<resources>
+    <string name="noctis_theme_name">Noctis</string>
+    <string name="noctis_unofficial_badge">Unofficial modified version</string>
+    <string name="noctis_unofficial_based_on">Unofficial modified version of %1$s</string>
+    <string name="noctis_upstream_credit">Original project by MovTery and contributors (GPL-3.0). Noctis Launcher is built on top of it.</string>
+
+    <string name="noctis_rail_home">Home</string>
+    <string name="noctis_rail_files">Files</string>
+    <string name="noctis_rail_back">Back</string>
+    <string name="noctis_rail_tasks">Tasks</string>
+
+    <string name="noctis_home_play">Play</string>
+    <string name="noctis_home_no_instance">No instance selected</string>
+    <string name="noctis_home_library">Library</string>
+    <string name="noctis_home_search">Search instances</string>
+    <string name="noctis_home_clear_search">Clear search</string>
+    <string name="noctis_home_new_instance">New instance</string>
+    <string name="noctis_home_memory">Memory</string>
+    <string name="noctis_home_memory_value">%1$s of %2$s</string>
+    <string name="noctis_home_memory_high">High: leaves little memory for the system and other apps</string>
+    <string name="noctis_home_memory_instance">This instance uses its own memory setting (%1$s)</string>
+    <string name="noctis_home_empty_library">No instances yet. Tap New instance to install Minecraft.</string>
+    <string name="noctis_home_no_results">Nothing found for \"%1$s\"</string>
+    <string name="noctis_home_loading">Loading instances…</string>
+    <string name="noctis_home_selected">Selected</string>
+    <string name="noctis_home_instance_options">Instance settings</string>
+    <string name="noctis_home_hold_hint">Tap to select, hold for settings</string>
+
+    <string name="noctis_home_accounts">Accounts</string>
+    <string name="noctis_home_no_account">No account</string>
+    <string name="noctis_home_add_account">Add account</string>
+    <string name="noctis_home_change_skin">Change skin</string>
+</resources>

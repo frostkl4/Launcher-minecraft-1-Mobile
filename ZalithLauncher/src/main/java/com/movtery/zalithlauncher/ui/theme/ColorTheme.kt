@@ -31,6 +31,8 @@ data class ColorTheme(
 )
 
 enum class ColorThemeType {
+    /** Noctis default night theme */
+    NOCTIS,
     DYNAMIC,
     EMBERMIRE,
     VELVET_ROSE,

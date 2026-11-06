@@ -106,16 +106,27 @@ fun AboutInfoScreen(
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         val launcherName = remember { launcherName() }
 
+                        // Noctis: this build is an unofficial modified version, so it shows its
+                        // own identity here and links to both the fork and the original project.
                         ButtonIconItem(
-                            icon = painterResource(R.drawable.img_launcher),
+                            icon = painterResource(R.drawable.img_noctis_logo),
                             title = BuildKeys.LAUNCHER_NAME,
-                            text = stringResource(R.string.about_launcher_version, BuildConfig.VERSION_NAME),
+                            text = stringResource(R.string.about_launcher_version, BuildConfig.VERSION_NAME) +
+                                    "\n" + stringResource(R.string.noctis_unofficial_based_on, com.movtery.zalithlauncher.noctis.NoctisInfo.UPSTREAM_NAME),
                             button = {
                                 Button(
-                                    onClick = checkUpdate
+                                    onClick = { openLink(BuildKeys.URL_HOME) }
                                 ) {
-                                    Text(text = stringResource(R.string.upgrade_title))
+                                    Text(text = stringResource(R.string.about_launcher_project_link))
                                 }
+                            }
+                        )
+
+                        ButtonIconItem(
+                            icon = painterResource(R.drawable.img_launcher),
+                            title = com.movtery.zalithlauncher.noctis.NoctisInfo.UPSTREAM_NAME,
+                            text = stringResource(R.string.noctis_upstream_credit),
+                            button = {
                                 Button(
                                     onClick = { openLink(URL_PROJECT) }
                                 ) {

@@ -2,7 +2,7 @@
 ![Downloads](https://img.shields.io/github/downloads/ZalithLauncher/ZalithLauncher2/total)
 [![Sponsor](https://img.shields.io/badge/sponsor-30363D?logo=GitHub-Sponsors)](https://afdian.com/a/MovTery)
 
-[English](README_EN_US.md) | [简体中文](README.md)
+[English](README_ZALITH_EN_US.md) | [简体中文](README_ZALITH_ZH_CN.md)
 
 
 > [!IMPORTANT]

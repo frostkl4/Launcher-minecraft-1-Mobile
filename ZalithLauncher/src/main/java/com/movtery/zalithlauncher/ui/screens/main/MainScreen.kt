@@ -76,6 +76,9 @@ import androidx.navigation3.runtime.entryProvider
 import com.movtery.zalithlauncher.BuildKeys
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.coroutine.TaskSystem
+import com.movtery.zalithlauncher.noctis.ui.NoctisDestination
+import com.movtery.zalithlauncher.noctis.ui.NoctisRail
+import com.movtery.zalithlauncher.noctis.ui.NoctisSkyBackground
 import com.movtery.zalithlauncher.game.version.installed.Version
 import com.movtery.zalithlauncher.game.version.installed.VersionsManager
 import com.movtery.zalithlauncher.path.PathManager
@@ -165,322 +168,161 @@ fun MainScreen(
         backgroundColor().copy(alpha = launcherBackgroundOpacity)
     } else backgroundColor()
 
+    Box(modifier = Modifier.fillMaxSize()) {
+    // Noctis: when the user has no custom wallpaper, the night sky is the wallpaper
+    if (!isBackgroundValid) {
+        NoctisSkyBackground(modifier = Modifier.fillMaxSize())
+    }
+
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = backgroundColor,
+        color = if (isBackgroundValid) backgroundColor else Color.Transparent,
         contentColor = onBackgroundColor()
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-        ) {
-            TopBar(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(40.dp),
-                mainScreenKey = mainScreenKey,
-                inLauncherScreen = inLauncherScreen,
-                taskRunning = taskRunning,
-                isTasksExpanded = isTaskMenuExpanded,
-                contentColor = onBackgroundColor(),
-                onScreenBack = {
-                    screenBackStackModel.mainScreen.backStack.removeFirstOrNull()
+        val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+        val destination = when (mainScreenKey) {
+            null, is NormalNavKey.LauncherMain -> NoctisDestination.Home
+            is NestedNavKey.Download -> NoctisDestination.Download
+            is NormalNavKey.Multiplayer -> NoctisDestination.Multiplayer
+            is NestedNavKey.Settings -> NoctisDestination.Settings
+            else -> NoctisDestination.Other
+        }
+
+        // Noctis: navigation rail on the left instead of the original top bar,
+        // so the home screen gets the full height of the phone in landscape
+        Row(modifier = Modifier.fillMaxSize()) {
+            NoctisRail(
+                current = destination,
+                isHome = inLauncherScreen,
+                hasTasks = !taskRunning && !isTaskMenuExpanded,
+                onBack = {
+                    if (!inLauncherScreen) {
+                        backDispatcher?.onBackPressed() ?: run {
+                            screenBackStackModel.mainScreen.backStack.removeFirstOrNull()
+                        }
+                    }
                 },
-                toMainScreen = toMainScreen,
-                toSettingsScreen = {
-                    screenBackStackModel.mainScreen.removeAndNavigateTo(
-                        removes = screenBackStackModel.clearBeforeNavKeys,
-                        screenKey = screenBackStackModel.settingsScreen
-                    )
+                onHome = {
+                    if (!inLauncherScreen) toMainScreen()
                 },
-                toDownloadScreen = {
-                    screenBackStackModel.navigateToDownload()
+                onDownload = {
+                    if (destination != NoctisDestination.Download) screenBackStackModel.navigateToDownload()
                 },
-                toMultiplayerScreen = {
-                    screenBackStackModel.mainScreen.removeAndNavigateTo(
-                        removes = screenBackStackModel.clearBeforeNavKeys,
-                        screenKey = NormalNavKey.Multiplayer
-                    )
+                onMultiplayer = {
+                    if (destination != NoctisDestination.Multiplayer) {
+                        screenBackStackModel.mainScreen.removeAndNavigateTo(
+                            removes = screenBackStackModel.clearBeforeNavKeys,
+                            screenKey = NormalNavKey.Multiplayer
+                        )
+                    }
                 },
-                openFileManager = {
+                onFiles = {
                     eventViewModel.sendEvent(
                         EventViewModel.Event.OpenFileManager(
                             rootPath = PathManager.DIR_FILES_EXTERNAL.absolutePath
                         )
                     )
                 },
-                changeExpandedState = {
-                    changeTasksExpandedState()
+                onSettings = {
+                    if (destination != NoctisDestination.Settings) {
+                        screenBackStackModel.mainScreen.removeAndNavigateTo(
+                            removes = screenBackStackModel.clearBeforeNavKeys,
+                            screenKey = screenBackStackModel.settingsScreen
+                        )
+                    }
                 },
+                onTasks = {
+                    changeTasksExpandedState()
+                }
             )
 
-            Box(
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .fillMaxHeight()
                     .weight(1f)
             ) {
-                NavStateHost(rootKey = screenBackStackModel.mainScreen) {
-                    NavigationUI(
-                        modifier = Modifier.fillMaxSize(),
-                        screenBackStackModel = screenBackStackModel,
-                        toMainScreen = toMainScreen,
-                        eventViewModel = eventViewModel,
-                        modpackImportViewModel = modpackImportViewModel,
-                        modifyVersionViewModel = modifyVersionViewModel,
-                        submitError = submitError
+                // Sub-screens keep a slim title so the user knows where they are
+                AnimatedVisibility(
+                    visible = !inLauncherScreen,
+                    enter = fadeIn() + slideInVertically(initialOffsetY = { -it }),
+                    exit = fadeOut() + slideOutVertically(targetOffsetY = { -it })
+                ) {
+                    ScreenTitle(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(36.dp)
+                            .padding(horizontal = 16.dp),
+                        mainScreenKey = mainScreenKey,
+                        contentColor = onBackgroundColor()
                     )
                 }
 
-                TaskMenu(
-                    isExpanded = isTaskMenuExpanded,
+                Box(
                     modifier = Modifier
-                        .fillMaxHeight()
-                        .fillMaxWidth(0.3f)
-                        .align(Alignment.CenterStart)
-                        .padding(all = 6.dp)
+                        .fillMaxWidth()
+                        .weight(1f)
                 ) {
-                    changeTasksExpandedState()
+                    NavStateHost(rootKey = screenBackStackModel.mainScreen) {
+                        NavigationUI(
+                            modifier = Modifier.fillMaxSize(),
+                            screenBackStackModel = screenBackStackModel,
+                            toMainScreen = toMainScreen,
+                            eventViewModel = eventViewModel,
+                            modpackImportViewModel = modpackImportViewModel,
+                            modifyVersionViewModel = modifyVersionViewModel,
+                            submitError = submitError
+                        )
+                    }
+
+                    TaskMenu(
+                        isExpanded = isTaskMenuExpanded,
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .fillMaxWidth(0.3f)
+                            .align(Alignment.CenterStart)
+                            .padding(all = 6.dp)
+                    ) {
+                        changeTasksExpandedState()
+                    }
                 }
             }
         }
     }
+    }
 }
 
+/**
+ * Noctis: slim title for sub-screens (the rail already has back/home/navigation).
+ */
 @Composable
-private fun <E: TitledNavKey> TopBar(
+private fun <E: TitledNavKey> ScreenTitle(
     mainScreenKey: E?,
-    inLauncherScreen: Boolean,
-    taskRunning: Boolean,
-    isTasksExpanded: Boolean,
-    modifier: Modifier = Modifier,
     contentColor: Color,
-    onScreenBack: () -> Unit,
-    toMainScreen: () -> Unit,
-    toSettingsScreen: () -> Unit,
-    toDownloadScreen: () -> Unit,
-    toMultiplayerScreen: () -> Unit,
-    openFileManager: () -> Unit,
-    changeExpandedState: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    val festivals = LocalFestivals.current
-
-    val inMultiplayerScreen = mainScreenKey is NormalNavKey.Multiplayer
-    val inDownloadScreen = mainScreenKey is NestedNavKey.Download
-    val inSettingsScreen = mainScreenKey is NestedNavKey.Settings
-
-    CompositionLocalProvider(
-        LocalContentColor provides contentColor
-    ) {
-        ConstraintLayout(modifier = modifier) {
-            val (backCenter, title, endButtons) = createRefs()
-
-            val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
-
-            Row(
-                modifier = Modifier
-                    .constrainAs(backCenter) {
-                        start.linkTo(parent.start)
-                        top.linkTo(parent.top)
-                        bottom.linkTo(parent.bottom)
-                    }
-                    .fillMaxHeight()
-            ) {
-                AnimatedVisibility(
-                    visible = !inLauncherScreen
-                ) {
-                    Row(modifier = Modifier.fillMaxHeight()) {
-                        Spacer(Modifier.width(12.dp))
-
-                        IconButton(
-                            modifier = Modifier.fillMaxHeight(),
-                            onClick = {
-                                if (!inLauncherScreen) {
-                                    //不在主屏幕时才允许返回
-                                    backDispatcher?.onBackPressed() ?: run {
-                                        onScreenBack()
-                                    }
-                                }
-                            }
-                        ) {
-                            Icon(
-                                modifier = Modifier.size(24.dp),
-                                painter = painterResource(R.drawable.ic_arrow_back),
-                                contentDescription = stringResource(R.string.generic_back)
-                            )
-                        }
-
-                        IconButton(
-                            modifier = Modifier.fillMaxHeight(),
-                            onClick = {
-                                if (!inLauncherScreen) {
-                                    //不在主屏幕时才允许回到主页面
-                                    toMainScreen()
-                                }
-                            }
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_home_filled),
-                                contentDescription = stringResource(R.string.generic_main_menu)
-                            )
-                        }
-                    }
-                }
-            }
+    CompositionLocalProvider(LocalContentColor provides contentColor) {
+        Box(modifier = modifier, contentAlignment = Alignment.CenterStart) {
             val parentRes = mainScreenKey?.title
             val childRes = (mainScreenKey as? BackStackNavKey<*>)?.currentKey?.title
-
-            Crossfade(
-                modifier = Modifier.constrainAs(title) {
-                    centerVerticallyTo(parent)
-                    start.linkTo(backCenter.end, margin = 16.dp)
-                },
-                targetState = parentRes to childRes
-            ) { (parent, child) ->
-                val style = MaterialTheme.typography.titleMedium
-                val softWarp = false
-                val maxLines = 1
-
-                if (parent == null) {
-                    if (festivals.isEmpty()) {
-                        Text(
-                            text = BuildKeys.LAUNCHER_IDENTIFIER,
-                            style = style,
-                            softWrap = softWarp,
-                            maxLines = maxLines
-                        )
-                    } else {
-                        FestivalTitleText(
-                            festivals = festivals,
-                            style = style,
-                            maxLines = maxLines
-                        )
-                    }
-                } else {
-                    val titleText = if (child != null) {
-                        androidText(parent, androidText(" - "), child)
-                    } else {
-                        parent
-                    }
-
+            Crossfade(targetState = parentRes to childRes, label = "screenTitle") { (parent, child) ->
+                if (parent != null) {
+                    val titleText = if (child != null) androidText(parent, androidText(" - "), child) else parent
                     AndroidStringText(
                         text = titleText,
-                        style = style,
-                        softWrap = softWarp,
-                        maxLines = maxLines
+                        style = MaterialTheme.typography.titleMedium,
+                        softWrap = false,
+                        maxLines = 1
+                    )
+                } else {
+                    Text(
+                        text = BuildKeys.LAUNCHER_NAME,
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1
                     )
                 }
-            }
-
-            Row(
-                modifier = Modifier
-                    .constrainAs(endButtons) {
-                        top.linkTo(parent.top)
-                        bottom.linkTo(parent.bottom)
-                        end.linkTo(parent.end, margin = 12.dp)
-                    },
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                AnimatedVisibility(
-                    visible = !(isTasksExpanded || taskRunning),
-                    enter = slideInVertically(
-                        initialOffsetY = { -50 }
-                    ) + fadeIn(),
-                    exit = slideOutVertically(
-                        targetOffsetY = { -50 }
-                    ) + fadeOut()
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .clip(shape = MaterialTheme.shapes.large)
-                            .clickable { changeExpandedState() }
-                            .padding(all = 8.dp)
-                            .width(120.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        LinearProgressIndicator(modifier = Modifier.weight(1f))
-                        Icon(
-                            modifier = Modifier.size(22.dp),
-                            painter = painterResource(R.drawable.ic_assignment_filled),
-                            contentDescription = stringResource(R.string.main_task_menu)
-                        )
-                    }
-                }
-
-                IconButton(
-                    onClick = openFileManager
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_folder_filled),
-                        contentDescription = null
-                    )
-                }
-
-                TopBarRailItem(
-                    selected = inMultiplayerScreen,
-                    painter = painterResource(R.drawable.ic_group_filled),
-                    text = stringResource(R.string.terracotta),
-                    onClick = {
-                        if (!inMultiplayerScreen) toMultiplayerScreen()
-                    },
-                )
-
-                TopBarRailItem(
-                    selected = inDownloadScreen,
-                    painter = painterResource(R.drawable.ic_download_2_filled),
-                    text = stringResource(R.string.generic_download),
-                    onClick = {
-                        if (!inDownloadScreen) toDownloadScreen()
-                    },
-                )
-
-                TopBarRailItem(
-                    selected = inSettingsScreen,
-                    painter = painterResource(R.drawable.ic_settings_filled),
-                    text = stringResource(R.string.generic_setting),
-                    onClick = {
-                        if (!inSettingsScreen) toSettingsScreen()
-                    },
-                )
             }
         }
     }
-}
-
-@Composable
-private fun TopBarRailItem(
-    selected: Boolean,
-    painter: Painter,
-    text: String,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit = {},
-    textStyle: TextStyle = MaterialTheme.typography.labelMedium
-) {
-    TextRailItem(
-        modifier = modifier,
-        onClick = onClick,
-        text = {
-            AnimatedVisibility(visible = selected) {
-                Row {
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = text,
-                        style = textStyle
-                    )
-                }
-            }
-        },
-        icon = {
-            Icon(
-                painter = painter,
-                contentDescription = text
-            )
-        },
-        selected = selected,
-        selectedPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
-        unSelectedPadding = PaddingValues(all = 8.dp),
-    )
 }
 
 @Composable
