@@ -120,6 +120,19 @@ android {
             keyAlias = "movtery_zalith"
             keyPassword = getKeyFromLocal("KEY_PASSWORD", ".key_password.txt")
         }
+        // Noctis: official release key. The release workflow decodes it from the repository
+        // secrets into a temporary file and passes its path here; it is never committed.
+        create("noctisRelease") {
+            val keystorePath = System.getenv("NOCTIS_KEYSTORE_FILE")
+            if (!keystorePath.isNullOrBlank()) {
+                val password = System.getenv("NOCTIS_KEYSTORE_PASSWORD").orEmpty()
+                storeFile = file(keystorePath)
+                storeType = "pkcs12"
+                storePassword = password
+                keyAlias = System.getenv("NOCTIS_KEY_ALIAS")?.takeIf { it.isNotBlank() } ?: "noctis"
+                keyPassword = System.getenv("NOCTIS_KEY_PASSWORD")?.takeIf { it.isNotBlank() } ?: password
+            }
+        }
         create("debugBuild") {
             storeFile = file("zalith_launcher_debug.jks")
             storePassword = defaultStorePassword
@@ -142,7 +155,12 @@ android {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
-            signingConfig = signingConfigs.getByName("releaseBuild")
+            // Noctis: sign with the Noctis key when the release workflow provides it
+            signingConfig = if (!System.getenv("NOCTIS_KEYSTORE_FILE").isNullOrBlank()) {
+                signingConfigs.getByName("noctisRelease")
+            } else {
+                signingConfigs.getByName("releaseBuild")
+            }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

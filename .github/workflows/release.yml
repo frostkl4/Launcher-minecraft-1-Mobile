@@ -1,0 +1,264 @@
+# Noctis Launcher — official release
+#
+# Builds the signed release APKs and publishes them in the Releases tab.
+#
+# How to start it:
+#   - push or create a tag like v0.1.0 (also works when the tag is created from
+#     the "Draft a new release" page of GitHub), or
+#   - Actions → Release → Run workflow, and type the tag.
+#     "Only test the build" builds arm64 with a temporary key and publishes nothing.
+#
+# Repository secrets needed (Settings → Secrets and variables → Actions):
+#   NOCTIS_KEYSTORE_BASE64    the release keystore (PKCS12) encoded in Base64
+#   NOCTIS_KEYSTORE_PASSWORD  its password
+# Optional: OAUTH_CLIENT_ID (Microsoft login), CURSEFORGE_API_KEY.
+
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to publish (e.g. v0.1.0). It must already exist."
+        required: false
+        type: string
+      test_only:
+        description: "Only test the build (temporary key, nothing is published)"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  RAW_TAG: ${{ inputs.tag || github.ref_name }}
+  TEST_ONLY: ${{ inputs.test_only && 'true' || 'false' }}
+
+jobs:
+  build:
+    name: APK (${{ matrix.arch }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        # arm64: almost every phone from the last years. arm: older / 32-bit phones.
+        arch: ${{ fromJSON(inputs.test_only && '["arm64"]' || '["arm64", "arm"]') }}
+
+    steps:
+      - name: Check the version tag
+        id: version
+        run: |
+          TAG="$RAW_TAG"
+          ref="refs/tags/$TAG"
+          if [ "$TEST_ONLY" = "true" ]; then
+            ref="${{ github.sha }}"
+            [ -n "${{ inputs.tag }}" ] || TAG="v0.0.0-test"
+          fi
+          if ! [[ "$TAG" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)(-[0-9A-Za-z.]+)?$ ]]; then
+            echo "::error::A tag precisa ter o formato vX.Y.Z (ex.: v0.1.0). Recebido: '$TAG'"
+            exit 1
+          fi
+          major=${BASH_REMATCH[1]}; minor=${BASH_REMATCH[2]}; patch=${BASH_REMATCH[3]}
+          if [ "$minor" -gt 99 ] || [ "$patch" -gt 99 ]; then
+            echo "::error::Minor e patch vão até 99 (ex.: v1.99.99)."
+            exit 1
+          fi
+          # v0.1.0 -> name 0.1.0, code 100 (major*10000 + minor*100 + patch)
+          echo "TAG=$TAG" >> "$GITHUB_ENV"
+          echo "VERSION_NAME=${TAG#v}" >> "$GITHUB_ENV"
+          echo "VERSION_CODE=$((10#$major * 10000 + 10#$minor * 100 + 10#$patch))" >> "$GITHUB_ENV"
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ steps.version.outputs.ref }}
+          submodules: recursive
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: "temurin"
+          java-version: "21"
+
+      - name: Prepare the signing key
+        env:
+          NOCTIS_KEYSTORE_BASE64: ${{ secrets.NOCTIS_KEYSTORE_BASE64 }}
+          NOCTIS_KEYSTORE_PASSWORD: ${{ secrets.NOCTIS_KEYSTORE_PASSWORD }}
+        run: |
+          keystore="$RUNNER_TEMP/noctis-release.p12"
+          if [ "$TEST_ONLY" = "true" ]; then
+            # Throwaway key, only to check that the release build works
+            password="$(openssl rand -hex 24)"
+            keytool -genkeypair -v -storetype PKCS12 -keystore "$keystore" \
+              -alias noctis -keyalg RSA -keysize 2048 -validity 30 \
+              -storepass "$password" -keypass "$password" \
+              -dname "CN=Noctis Launcher test build" >/dev/null
+          else
+            if [ -z "$NOCTIS_KEYSTORE_BASE64" ] || [ -z "$NOCTIS_KEYSTORE_PASSWORD" ]; then
+              echo "::error::Faltam os secrets NOCTIS_KEYSTORE_BASE64 e/ou NOCTIS_KEYSTORE_PASSWORD (Settings → Secrets and variables → Actions)."
+              exit 1
+            fi
+            # --ignore-garbage tolerates spaces and line breaks added when pasting on a phone
+            printf '%s' "$NOCTIS_KEYSTORE_BASE64" | base64 --decode --ignore-garbage > "$keystore"
+            password="$NOCTIS_KEYSTORE_PASSWORD"
+            if ! keytool -list -storetype PKCS12 -keystore "$keystore" -storepass "$password" -alias noctis >/dev/null 2>&1; then
+              echo "::error::A chave não abriu: confira se os dois secrets foram colados inteiros e sem espaços."
+              exit 1
+            fi
+          fi
+          echo "::add-mask::$password"
+          echo "NOCTIS_KEYSTORE_FILE=$keystore" >> "$GITHUB_ENV"
+          echo "NOCTIS_KEYSTORE_PASSWORD=$password" >> "$GITHUB_ENV"
+          echo "NOCTIS_KEY_ALIAS=noctis" >> "$GITHUB_ENV"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
+        with:
+          add-job-summary: "on-failure"
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
+
+      - name: Cache Rust build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            PetLib/rust/target
+          key: petlib-rust-${{ runner.os }}-${{ hashFiles('PetLib/rust/Cargo.lock') }}
+          restore-keys: petlib-rust-${{ runner.os }}-
+
+      - name: Install cargo-ndk
+        run: |
+          version="4.1.2"
+          curl -sL "https://github.com/bbqsrc/cargo-ndk/releases/download/v${version}/cargo-ndk-x86_64-unknown-linux-gnu-v${version}.tgz" |
+            tar xz -C "$HOME/.cargo/bin" --strip-components=1
+          chmod +x "$HOME/.cargo/bin"/cargo-ndk*
+          cargo ndk --version
+
+      - name: Setup Android NDK
+        run: |
+          ndk=$(ls -d "$ANDROID_HOME"/ndk/* 2>/dev/null | sort -V | tail -1)
+          if [ -z "$ndk" ] || [ ! -f "$ndk/source.properties" ]; then
+            sdkmanager --install "ndk;27.0.12077973"
+            ndk=$(ls -d "$ANDROID_HOME"/ndk/* | sort -V | tail -1)
+          fi
+          echo "Using NDK at $ndk"
+          test -f "$ndk/source.properties"
+          echo "ANDROID_NDK_HOME=$ndk" >> "$GITHUB_ENV"
+
+      - name: Build the release APK (${{ matrix.arch }})
+        env:
+          OAUTH_CLIENT_ID: ${{ secrets.OAUTH_CLIENT_ID }}
+          CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
+        run: |
+          # Empty secrets must not override the defaults from gradle.properties
+          [ -n "$OAUTH_CLIENT_ID" ] || unset OAUTH_CLIENT_ID
+          [ -n "$CURSEFORGE_API_KEY" ] || unset CURSEFORGE_API_KEY
+          chmod +x gradlew
+          ./gradlew ZalithLauncher:assembleRelease -Darch=${{ matrix.arch }} \
+            -Plauncher_version_name="$VERSION_NAME" \
+            -Plauncher_version_code="$VERSION_CODE"
+
+      - name: Check the signature and name the APK
+        run: |
+          apk=$(find ZalithLauncher/build/outputs/apk/release -name '*.apk' | head -1)
+          test -n "$apk"
+          apksigner=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)/apksigner
+          # Fails the job if the APK is not properly signed
+          "$apksigner" verify --print-certs "$apk" > "$RUNNER_TEMP/certs.txt"
+          grep -E "certificate (DN|SHA-256)" "$RUNNER_TEMP/certs.txt" || true
+          mkdir -p dist
+          cp "$apk" "dist/NoctisLauncher-$TAG-${{ matrix.arch }}.apk"
+          ls -la dist
+
+      - name: Remove the key from the runner
+        if: always()
+        run: rm -f "$RUNNER_TEMP/noctis-release.p12"
+
+      - name: Keep the APK for the release job
+        uses: actions/upload-artifact@v7
+        with:
+          name: apk-${{ matrix.arch }}
+          path: dist/*.apk
+          compression-level: 0
+          retention-days: ${{ env.TEST_ONLY == 'true' && 7 || 1 }}
+
+  publish:
+    name: Publish in Releases
+    needs: build
+    if: ${{ !inputs.test_only }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
+
+    steps:
+      - name: Get the APKs
+        uses: actions/download-artifact@v8
+        with:
+          pattern: apk-*
+          merge-multiple: true
+          path: dist
+
+      - name: Checksums and release notes
+        run: |
+          cd dist
+          sha256sum *.apk > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+          cat > ../notes.md <<EOF
+          ## 🌙 Noctis Launcher ${TAG}
+
+          Launcher de Minecraft: Java Edition para Android, feito para o celular deitado.
+
+          ### Qual arquivo baixar
+          | Arquivo | Para quem |
+          |---|---|
+          | \`NoctisLauncher-${TAG}-arm64.apk\` | **Quase todos os celulares** dos últimos anos (64 bits) |
+          | \`NoctisLauncher-${TAG}-arm.apk\` | Celulares antigos ou de 32 bits |
+
+          Na dúvida, baixe o **arm64**. Se o Android disser que o app não é compatível, use o **arm**.
+
+          ### Como instalar
+          1. Baixe o \`.apk\` (ele já vem pronto, não precisa descompactar).
+          2. Abra o arquivo e permita "instalar apps desconhecidos" para o navegador ou gerenciador de arquivos, se o Android pedir.
+          3. Na primeira abertura o launcher prepara os componentes do Java; espere terminar.
+
+          ### Verificar o download (opcional)
+          \`SHA256SUMS.txt\` traz o SHA-256 de cada APK.
+
+          ---
+          Versão modificada não oficial do [Zalith Launcher 2](https://github.com/ZalithLauncher/ZalithLauncher2) (GPL-3.0). Não é afiliada à Mojang nem à Microsoft.
+          EOF
+
+      - name: Create or update the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          prerelease=""
+          case "$TAG" in *-*) prerelease="--prerelease" ;; esac
+          if gh release view "$TAG" -R "$REPO" >/dev/null 2>&1; then
+            # Release already made by hand on the website: just add (or replace) the files
+            gh release upload "$TAG" dist/*.apk dist/SHA256SUMS.txt -R "$REPO" --clobber
+          else
+            gh release create "$TAG" dist/*.apk dist/SHA256SUMS.txt -R "$REPO" \
+              --verify-tag \
+              --title "Noctis Launcher $TAG" \
+              --notes-file notes.md \
+              $prerelease
+          fi
+          gh release view "$TAG" -R "$REPO" --json url -q .url

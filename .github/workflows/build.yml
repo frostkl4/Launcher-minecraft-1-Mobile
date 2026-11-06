@@ -116,3 +116,5 @@ jobs:
         with:
           name: debug apk (${{ matrix.arch }})
           path: ZalithLauncher/build/outputs/apk/debug/*.apk
+          # Noctis: upload the .apk itself instead of a .zip, so it installs without extracting
+          archive: false
