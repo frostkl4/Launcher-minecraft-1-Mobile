@@ -60,7 +60,7 @@ jobs:
           ref="refs/tags/$TAG"
           if [ "$TEST_ONLY" = "true" ]; then
             ref="${{ github.sha }}"
-            [ -n "${{ inputs.tag }}" ] || TAG="v0.0.0-test"
+            [ -n "${{ inputs.tag }}" ] || TAG="v0.0.1-test"
           fi
           if ! [[ "$TAG" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)(-[0-9A-Za-z.]+)?$ ]]; then
             echo "::error::A tag precisa ter o formato vX.Y.Z (ex.: v0.1.0). Recebido: '$TAG'"
@@ -72,9 +72,14 @@ jobs:
             exit 1
           fi
           # v0.1.0 -> name 0.1.0, code 100 (major*10000 + minor*100 + patch)
+          code=$((10#$major * 10000 + 10#$minor * 100 + 10#$patch))
+          if [ "$code" -lt 1 ]; then
+            echo "::error::A versão v0.0.0 não é válida no Android; use a partir de v0.0.1."
+            exit 1
+          fi
           echo "TAG=$TAG" >> "$GITHUB_ENV"
           echo "VERSION_NAME=${TAG#v}" >> "$GITHUB_ENV"
-          echo "VERSION_CODE=$((10#$major * 10000 + 10#$minor * 100 + 10#$patch))" >> "$GITHUB_ENV"
+          echo "VERSION_CODE=$code" >> "$GITHUB_ENV"
           echo "ref=$ref" >> "$GITHUB_OUTPUT"
 
       - name: Checkout
