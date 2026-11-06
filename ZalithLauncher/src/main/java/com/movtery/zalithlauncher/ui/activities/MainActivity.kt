@@ -225,9 +225,9 @@ class MainActivity : BaseAppCompatActivity() {
         NotificationManager.initManager(this)
 
         //检查更新
-        // Noctis: the update feed belongs to the official Zalith Launcher 2, so an
+        // Moonlight: the update feed belongs to the official Zalith Launcher 2, so an
         // unofficial build must not offer it as an "update" on start.
-        if (com.movtery.zalithlauncher.noctis.NoctisInfo.CHECK_UPSTREAM_UPDATES_ON_START && !isImporting && launcherUpgradeViewModel.operation == LauncherUpgradeOperation.None) {
+        if (com.movtery.zalithlauncher.moonlight.MoonlightInfo.CHECK_UPSTREAM_UPDATES_ON_START && !isImporting && launcherUpgradeViewModel.operation == LauncherUpgradeOperation.None) {
             lifecycleScope.launch {
                 launcherUpgradeViewModel.checkOnAppStart()
             }
@@ -373,8 +373,8 @@ class MainActivity : BaseAppCompatActivity() {
                         launchGameViewModel = launchGameViewModel,
                         exitActivity = {
                             this@MainActivity.finish()
-                            //Noctis: give the launcher's memory to the game (game runs in its own process)
-                            com.movtery.zalithlauncher.noctis.NoctisLauncherRelease.releaseForGame(application)
+                            //Moonlight: give the launcher's memory to the game (game runs in its own process)
+                            com.movtery.zalithlauncher.moonlight.MoonlightLauncherRelease.releaseForGame(application)
                         },
                         ensureVulkanSupported = vulkanCheckerViewModel::ensureSupported,
                         submitError = {

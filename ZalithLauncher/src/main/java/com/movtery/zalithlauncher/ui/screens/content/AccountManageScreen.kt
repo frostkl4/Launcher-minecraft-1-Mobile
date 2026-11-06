@@ -807,7 +807,7 @@ private fun AccountSkinOperation(
                     actions.onIntent(AccountManageIntent.ApplyMicrosoftCape(account, cape))
                 },
                 onApplyOfflineCape = { bytes ->
-                    //Noctis: save/remove the offline cape, then refresh every skin preview
+                    //Moonlight: save/remove the offline cape, then refresh every skin preview
                     capeScope.launch {
                         runCatching { applyOfflineCape(account, bytes) }
                         AccountsManager.refreshWardrobe()

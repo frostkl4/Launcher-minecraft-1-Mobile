@@ -1,4 +1,4 @@
-# Noctis Launcher — official release
+# Moonlight Launcher — official release
 #
 # Builds the signed release APKs and publishes them in the Releases tab.
 #
@@ -8,9 +8,10 @@
 #   - Actions → Release → Run workflow, and type the tag.
 #     "Only test the build" builds both APKs with a temporary key and publishes nothing.
 #
-# Signing: the release keystore is signing/noctis-release.p12 (PKCS12, locked by
+# Signing: the release keystore is signing/moonlight-release.p12 (PKCS12, locked by
 # a strong password). Repository secret needed (Settings → Secrets and variables → Actions):
-#   NOCTIS_KEYSTORE_PASSWORD  the keystore password (keep it secret!)
+#   NOCTIS_KEYSTORE_PASSWORD  the keystore password (keep it secret!). The secret and the key
+#                             alias keep the project's first name (Noctis) so nothing changes for v0.1.0.
 # Forks without the file can pass the keystore as NOCTIS_KEYSTORE_BASE64 instead.
 # Optional: OAUTH_CLIENT_ID (Microsoft login), CURSEFORGE_API_KEY.
 
@@ -100,14 +101,14 @@ jobs:
           NOCTIS_KEYSTORE_BASE64: ${{ secrets.NOCTIS_KEYSTORE_BASE64 }}
           NOCTIS_KEYSTORE_PASSWORD: ${{ secrets.NOCTIS_KEYSTORE_PASSWORD }}
         run: |
-          keystore="$RUNNER_TEMP/noctis-release.p12"
+          keystore="$RUNNER_TEMP/moonlight-release.p12"
           if [ "$TEST_ONLY" = "true" ]; then
             # Throwaway key, only to check that the release build works
             password="$(openssl rand -hex 24)"
             keytool -genkeypair -v -storetype PKCS12 -keystore "$keystore" \
               -alias noctis -keyalg RSA -keysize 2048 -validity 30 \
               -storepass "$password" -keypass "$password" \
-              -dname "CN=Noctis Launcher test build" >/dev/null
+              -dname "CN=Moonlight Launcher test build" >/dev/null
           else
             if [ -z "$NOCTIS_KEYSTORE_PASSWORD" ]; then
               echo "::error::Falta o secret NOCTIS_KEYSTORE_PASSWORD (Settings → Secrets and variables → Actions)."
@@ -115,19 +116,19 @@ jobs:
             fi
             password=$(printf '%s' "$NOCTIS_KEYSTORE_PASSWORD" | tr -d '[:space:]')
             echo "NOCTIS_KEYSTORE_PASSWORD: ${#password} caracteres."
-            if [ -f signing/noctis-release.p12 ]; then
+            if [ -f signing/moonlight-release.p12 ]; then
               # The keystore in the repository is locked by the password secret
-              cp signing/noctis-release.p12 "$keystore"
+              cp signing/moonlight-release.p12 "$keystore"
             elif git fetch --quiet --depth=1 origin "${{ github.event.repository.default_branch }}" &&
-                 git cat-file -e FETCH_HEAD:signing/noctis-release.p12 2>/dev/null; then
+                 git cat-file -e FETCH_HEAD:signing/moonlight-release.p12 2>/dev/null; then
               # Tags made before the keystore was added: take it from the main branch
-              git show FETCH_HEAD:signing/noctis-release.p12 > "$keystore"
+              git show FETCH_HEAD:signing/moonlight-release.p12 > "$keystore"
             else
               # Forks without the file can pass the whole keystore as a Base64 secret
               clean=$(printf '%s' "$NOCTIS_KEYSTORE_BASE64" | tr -cd 'A-Za-z0-9+/=')
               echo "NOCTIS_KEYSTORE_BASE64: ${#clean} caracteres Base64."
               if [ -z "$clean" ] || [ $(( ${#clean} % 4 )) -ne 0 ] || ! printf '%s' "$clean" | base64 --decode > "$keystore" 2>/dev/null; then
-                echo "::error::Sem signing/noctis-release.p12 e o secret NOCTIS_KEYSTORE_BASE64 está vazio ou incompleto."
+                echo "::error::Sem signing/moonlight-release.p12 e o secret NOCTIS_KEYSTORE_BASE64 está vazio ou incompleto."
                 exit 1
               fi
             fi
@@ -202,12 +203,12 @@ jobs:
           "$apksigner" verify --print-certs "$apk" > "$RUNNER_TEMP/certs.txt"
           grep -E "certificate (DN|SHA-256)" "$RUNNER_TEMP/certs.txt" || true
           mkdir -p dist
-          cp "$apk" "dist/NoctisLauncher-$TAG-${{ matrix.arch }}.apk"
+          cp "$apk" "dist/MoonlightLauncher-$TAG-${{ matrix.arch }}.apk"
           ls -la dist
 
       - name: Remove the key from the runner
         if: always()
-        run: rm -f "$RUNNER_TEMP/noctis-release.p12"
+        run: rm -f "$RUNNER_TEMP/moonlight-release.p12"
 
       - name: Keep the APK for the release job
         uses: actions/upload-artifact@v7
@@ -241,15 +242,15 @@ jobs:
           sha256sum *.apk > SHA256SUMS.txt
           cat SHA256SUMS.txt
           cat > ../notes.md <<EOF
-          ## 🌙 Noctis Launcher ${TAG}
+          ## 🌙 Moonlight Launcher ${TAG}
 
           Launcher de Minecraft: Java Edition para Android, feito para o celular deitado.
 
           ### Qual arquivo baixar
           | Arquivo | Para quem |
           |---|---|
-          | \`NoctisLauncher-${TAG}-arm64.apk\` | **Quase todos os celulares** dos últimos anos (64 bits) |
-          | \`NoctisLauncher-${TAG}-arm.apk\` | Celulares antigos ou de 32 bits |
+          | \`MoonlightLauncher-${TAG}-arm64.apk\` | **Quase todos os celulares** dos últimos anos (64 bits) |
+          | \`MoonlightLauncher-${TAG}-arm.apk\` | Celulares antigos ou de 32 bits |
 
           Na dúvida, baixe o **arm64**. Se o Android disser que o app não é compatível, use o **arm**.
 
@@ -281,7 +282,7 @@ jobs:
           else
             gh release create "$TAG" dist/*.apk dist/SHA256SUMS.txt -R "$REPO" \
               --verify-tag \
-              --title "Noctis Launcher $TAG" \
+              --title "Moonlight Launcher $TAG" \
               --notes-file notes.md \
               $prerelease
           fi

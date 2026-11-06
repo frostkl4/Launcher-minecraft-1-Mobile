@@ -76,10 +76,10 @@ import androidx.navigation3.runtime.entryProvider
 import com.movtery.zalithlauncher.BuildKeys
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.coroutine.TaskSystem
-import com.movtery.zalithlauncher.noctis.ui.NoctisDestination
-import com.movtery.zalithlauncher.noctis.ui.NoctisRail
-import com.movtery.zalithlauncher.noctis.ui.NoctisTopBar
-import com.movtery.zalithlauncher.noctis.NoctisInfo
+import com.movtery.zalithlauncher.moonlight.ui.MoonlightDestination
+import com.movtery.zalithlauncher.moonlight.ui.MoonlightRail
+import com.movtery.zalithlauncher.moonlight.ui.MoonlightTopBar
+import com.movtery.zalithlauncher.moonlight.MoonlightInfo
 import com.movtery.zalithlauncher.game.account.AccountsManager
 import com.movtery.zalithlauncher.ui.screens.content.FirstLoginMenu
 import com.movtery.zalithlauncher.BuildConfig
@@ -170,7 +170,7 @@ fun MainScreen(
     val isBackgroundValid = LocalBackgroundViewModel.current?.isValid == true
     val launcherBackgroundOpacity = AllSettings.launcherBackgroundOpacity.state.toFloat() / 100f
 
-    // Noctis 1.0: solid deep-night background (the sky art lives in the home hero),
+    // Moonlight 1.0: solid deep-night background (the sky art lives in the home hero),
     // or the user's own wallpaper with the chosen opacity
     val backgroundColor = if (isBackgroundValid) {
         backgroundColor().copy(alpha = launcherBackgroundOpacity)
@@ -207,18 +207,18 @@ fun MainScreen(
     ) {
         val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
         val destination = when (mainScreenKey) {
-            null, is NormalNavKey.LauncherMain -> NoctisDestination.Home
-            is NormalNavKey.VersionsManager -> NoctisDestination.Library
-            is NestedNavKey.Download -> NoctisDestination.Explore
-            is NormalNavKey.AccountManager -> NoctisDestination.Skins
-            is NormalNavKey.Multiplayer -> NoctisDestination.Multiplayer
-            is NestedNavKey.Settings -> NoctisDestination.Settings
-            else -> NoctisDestination.Other
+            null, is NormalNavKey.LauncherMain -> MoonlightDestination.Home
+            is NormalNavKey.VersionsManager -> MoonlightDestination.Library
+            is NestedNavKey.Download -> MoonlightDestination.Explore
+            is NormalNavKey.AccountManager -> MoonlightDestination.Skins
+            is NormalNavKey.Multiplayer -> MoonlightDestination.Multiplayer
+            is NestedNavKey.Settings -> MoonlightDestination.Settings
+            else -> MoonlightDestination.Other
         }
 
-        // Noctis: sidebar on the left, so the content gets the full height of the phone in landscape
+        // Moonlight: sidebar on the left, so the content gets the full height of the phone in landscape
         Row(modifier = Modifier.fillMaxSize()) {
-            NoctisRail(
+            MoonlightRail(
                 current = destination,
                 isHome = inLauncherScreen,
                 hasTasks = !taskRunning && !isTaskMenuExpanded,
@@ -233,19 +233,19 @@ fun MainScreen(
                 onNavigate = { target ->
                     if (target != destination) {
                         when (target) {
-                            NoctisDestination.Home -> toMainScreen()
-                            NoctisDestination.Library -> toVersionsManager()
-                            NoctisDestination.Explore -> screenBackStackModel.navigateToDownload()
-                            NoctisDestination.Skins -> toAccountManager()
-                            NoctisDestination.Multiplayer -> screenBackStackModel.mainScreen.removeAndNavigateTo(
+                            MoonlightDestination.Home -> toMainScreen()
+                            MoonlightDestination.Library -> toVersionsManager()
+                            MoonlightDestination.Explore -> screenBackStackModel.navigateToDownload()
+                            MoonlightDestination.Skins -> toAccountManager()
+                            MoonlightDestination.Multiplayer -> screenBackStackModel.mainScreen.removeAndNavigateTo(
                                 removes = topLevelKeys,
                                 screenKey = NormalNavKey.Multiplayer
                             )
-                            NoctisDestination.Settings -> screenBackStackModel.mainScreen.removeAndNavigateTo(
+                            MoonlightDestination.Settings -> screenBackStackModel.mainScreen.removeAndNavigateTo(
                                 removes = topLevelKeys,
                                 screenKey = screenBackStackModel.settingsScreen
                             )
-                            NoctisDestination.Other -> Unit
+                            MoonlightDestination.Other -> Unit
                         }
                     }
                 },
@@ -259,11 +259,11 @@ fun MainScreen(
                     .fillMaxHeight()
                     .weight(1f)
             ) {
-                NoctisTopBar(
+                MoonlightTopBar(
                     modifier = Modifier.fillMaxWidth(),
                     account = account,
                     onAccountClick = {
-                        if (destination != NoctisDestination.Skins) toAccountManager()
+                        if (destination != MoonlightDestination.Skins) toAccountManager()
                     }
                 ) {
                     if (inLauncherScreen) {
@@ -319,14 +319,14 @@ fun MainScreen(
 private fun HomeTitle() {
     Column {
         Text(
-            text = stringResource(R.string.noctis_rail_home),
+            text = stringResource(R.string.moonlight_rail_home),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
             maxLines = 1
         )
         Text(
             text = "${BuildKeys.LAUNCHER_NAME} ${BuildConfig.VERSION_NAME} · " +
-                    stringResource(R.string.noctis_unofficial_based_on, NoctisInfo.UPSTREAM_NAME),
+                    stringResource(R.string.moonlight_unofficial_based_on, MoonlightInfo.UPSTREAM_NAME),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1,
@@ -336,7 +336,7 @@ private fun HomeTitle() {
 }
 
 /**
- * Noctis: slim title for sub-screens (the rail already has back/home/navigation).
+ * Moonlight: slim title for sub-screens (the rail already has back/home/navigation).
  */
 @Composable
 private fun <E: TitledNavKey> ScreenTitle(

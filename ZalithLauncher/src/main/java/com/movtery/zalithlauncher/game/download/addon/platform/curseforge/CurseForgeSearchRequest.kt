@@ -89,7 +89,7 @@ data class CurseForgeSearchRequest(
         }
         append("sortField", sortField.curseforge)
         append("sortOrder", sortOrder)
-        //Noctis: CurseForge rejects pageSize > 50 and any request where index + pageSize > 10,000
+        //Moonlight: CurseForge rejects pageSize > 50 and any request where index + pageSize > 10,000
         val safePageSize = pageSize.coerceIn(1, CURSEFORGE_MAX_PAGE_SIZE)
         val safeIndex = index.coerceIn(0, CURSEFORGE_MAX_RESULT_WINDOW - safePageSize)
         append("index", safeIndex.toString())

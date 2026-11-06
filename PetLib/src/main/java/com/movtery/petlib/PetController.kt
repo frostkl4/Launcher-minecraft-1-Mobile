@@ -98,7 +98,7 @@ class PetController(
     }
     private var surfaceFailures = 0
     private var lastRenderNanos = 0L
-    // Noctis: per-preview frame cap (a small idle preview does not need 60+ fps)
+    // Moonlight: per-preview frame cap (a small idle preview does not need 60+ fps)
     @Volatile
     private var minFrameIntervalNanos = MIN_FRAME_INTERVAL_NANOS
     private var lastSlowLogNanos = 0L
@@ -173,7 +173,7 @@ class PetController(
     }
 
     /**
-     * Noctis: maximum frames per second for this preview. Every frame is drawn on the CPU,
+     * Moonlight: maximum frames per second for this preview. Every frame is drawn on the CPU,
      * so a lower cap means less CPU time taken away from the rest of the UI.
      */
     fun setMaxFps(fps: Int) {

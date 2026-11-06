@@ -39,7 +39,7 @@ fun SearchShadersScreen(
     swapToDownload: (Platform, projectId: String, iconUrl: String?) -> Unit = { _, _, _ -> }
 ) {
     val initialPlatform = remember {
-        //Noctis: without a CurseForge API key, start on Modrinth instead of an error page
+        //Moonlight: without a CurseForge API key, start on Modrinth instead of an error page
         AllSettings.searchShadersPlatform.getValue().usableOrModrinth()
     }
     SearchAddonScreen(

@@ -106,13 +106,13 @@ fun AboutInfoScreen(
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         val launcherName = remember { launcherName() }
 
-                        // Noctis: this build is an unofficial modified version, so it shows its
+                        // Moonlight: this build is an unofficial modified version, so it shows its
                         // own identity here and links to both the fork and the original project.
                         ButtonIconItem(
-                            icon = painterResource(R.drawable.img_noctis_logo),
+                            icon = painterResource(R.drawable.img_moonlight_logo),
                             title = BuildKeys.LAUNCHER_NAME,
                             text = stringResource(R.string.about_launcher_version, BuildConfig.VERSION_NAME) +
-                                    "\n" + stringResource(R.string.noctis_unofficial_based_on, com.movtery.zalithlauncher.noctis.NoctisInfo.UPSTREAM_NAME),
+                                    "\n" + stringResource(R.string.moonlight_unofficial_based_on, com.movtery.zalithlauncher.moonlight.MoonlightInfo.UPSTREAM_NAME),
                             button = {
                                 Button(
                                     onClick = { openLink(BuildKeys.URL_HOME) }
@@ -124,8 +124,8 @@ fun AboutInfoScreen(
 
                         ButtonIconItem(
                             icon = painterResource(R.drawable.img_launcher),
-                            title = com.movtery.zalithlauncher.noctis.NoctisInfo.UPSTREAM_NAME,
-                            text = stringResource(R.string.noctis_upstream_credit),
+                            title = com.movtery.zalithlauncher.moonlight.MoonlightInfo.UPSTREAM_NAME,
+                            text = stringResource(R.string.moonlight_upstream_credit),
                             button = {
                                 Button(
                                     onClick = { openLink(URL_PROJECT) }

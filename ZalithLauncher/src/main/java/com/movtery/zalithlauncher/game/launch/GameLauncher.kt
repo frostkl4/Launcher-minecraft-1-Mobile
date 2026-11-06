@@ -103,7 +103,7 @@ class GameLauncher(
         offlineServer.stop()
     }
 
-    //Noctis: the game gets a higher CPU priority than normal app threads (still below system UI)
+    //Moonlight: the game gets a higher CPU priority than normal app threads (still below system UI)
     override val gameThreadPriority: Int? = android.os.Process.THREAD_PRIORITY_DISPLAY
 
     override suspend fun launch(screenSize: IntSize): Int {
@@ -231,8 +231,8 @@ class GameLauncher(
     }
 
     override fun progressFinalUserArgs(args: MutableList<String>, ramAllocation: Int) {
-        //Noctis: hardware-aware heap ceiling, initial heap and garbage-collector flags
-        val profile = NoctisJvmProfile.build(
+        //Moonlight: hardware-aware heap ceiling, initial heap and garbage-collector flags
+        val profile = MoonlightJvmProfile.build(
             context = activity,
             requestedMb = version.getRamAllocation(activity),
             runtime = runtime,
@@ -244,7 +244,7 @@ class GameLauncher(
             args.add("-Xms${profile.initialHeapMb}M")
         }
         args.addAll(profile.extraArgs)
-        appendTitle("Noctis JVM Profile")
+        appendTitle("Moonlight JVM Profile")
         profile.logLines.forEach { appendInfo(it) }
         if (Renderers.isCurrentRendererValid()) {
             args.add("-Dorg.lwjgl.opengl.libname=${getGameRendererLibrary(version, configuredRenderer)}")
@@ -524,7 +524,7 @@ private fun setRendererEnv(
         // Mesa 系渲染器的 OSMesa 桥依据该变量定位 Mesa 库
         envMap["LIB_MESA_NAME"] = getRendererLibrary() ?: "null"
         envMap["MESA_GLSL_CACHE_DIR"] = PathManager.DIR_CACHE.absolutePath
-        //Noctis: newer Mesa only reads MESA_SHADER_CACHE_DIR. Same folder, so compiled shaders
+        //Moonlight: newer Mesa only reads MESA_SHADER_CACHE_DIR. Same folder, so compiled shaders
         //(and Zink's Vulkan pipelines) are reused across sessions: the "first time" stutter
         //of a new block/effect only happens once.
         envMap["MESA_SHADER_CACHE_DIR"] = PathManager.DIR_CACHE.absolutePath

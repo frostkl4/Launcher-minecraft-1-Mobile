@@ -53,7 +53,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImagePainter
 import coil3.compose.rememberAsyncImagePainter
 import com.movtery.zalithlauncher.R
-import com.movtery.zalithlauncher.noctis.image.NoctisImageLoader
+import com.movtery.zalithlauncher.moonlight.image.MoonlightImageLoader
 import com.movtery.zalithlauncher.game.download.addon.platform.Platform
 import com.movtery.zalithlauncher.game.download.addon.platform.PlatformClasses
 import com.movtery.zalithlauncher.game.download.modpack.platform.PackPlatform
@@ -225,11 +225,11 @@ fun AddonIcon(
     val density = LocalDensity.current
     val pxSize = with(density) { size.roundToPx() }
 
-    // Noctis: one sized request per icon, served from memory, then disk, then network.
+    // Moonlight: one sized request per icon, served from memory, then disk, then network.
     // (The old extra "preload" enqueue started a second identical download for every icon.)
     val imageRequest = remember(iconUrl, pxSize) {
         iconUrl?.takeIf { it.isNotBlank() }?.let {
-            NoctisImageLoader.iconRequest(context, it, pxSize)
+            MoonlightImageLoader.iconRequest(context, it, pxSize)
         }
     }
 

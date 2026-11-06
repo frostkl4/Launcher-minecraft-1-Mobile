@@ -381,7 +381,7 @@ private fun ResultList(
     installedInfo: ((Platform, projectId: String) -> InstalledMod?)? = null
 ) {
     val context = LocalContext.current
-    // Noctis: stable keys let the list reuse rows (and their loaded icons) while scrolling.
+    // Moonlight: stable keys let the list reuse rows (and their loaded icons) while scrolling.
     // APIs can repeat a project inside one page, and a repeated key would crash the list.
     val rows = remember(data) {
         data.distinctBy { (item, _) -> "${item.platform().name}:${item.platformId()}" }
@@ -466,7 +466,7 @@ fun ResultProjectLayout(
     }
 
     Surface(
-        // Noctis: the scale is read in the draw phase, so the entry animation does not
+        // Moonlight: the scale is read in the draw phase, so the entry animation does not
         // recompose the whole row on every frame while scrolling
         modifier = modifier.graphicsLayer {
             scaleX = scale.value

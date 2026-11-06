@@ -145,7 +145,7 @@ private fun LoadingScreen(
             ) {
                 Image(
                     modifier = Modifier.size(58.dp),
-                    painter = painterResource(R.drawable.img_noctis_logo),
+                    painter = painterResource(R.drawable.img_moonlight_logo),
                     contentDescription = stringResource(R.string.generic_loading)
                 )
                 LinearWavyProgressIndicator(

@@ -21,7 +21,7 @@ package com.movtery.zalithlauncher.utils.logging
 import android.content.Context
 import android.util.Log
 import com.movtery.zalithlauncher.BuildKeys
-import com.movtery.zalithlauncher.noctis.NoctisInfo
+import com.movtery.zalithlauncher.moonlight.MoonlightInfo
 import com.movtery.zalithlauncher.path.PathManager
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.utils.file.zipDirectory
@@ -161,8 +161,8 @@ object Logger : CoroutineScope {
     }
 
     private fun printToLogcat(level: Level, message: String) {
-        // Noctis: logcat only gets warnings and errors (the log file keeps the info lines)
-        if (!NoctisInfo.VERBOSE_LOGS && level > Level.WARNING) return
+        // Moonlight: logcat only gets warnings and errors (the log file keeps the info lines)
+        if (!MoonlightInfo.VERBOSE_LOGS && level > Level.WARNING) return
         when (level) {
             Level.ERROR -> Log.e("AppLog", message)
             Level.WARNING -> Log.w("AppLog", message)
@@ -173,7 +173,7 @@ object Logger : CoroutineScope {
     }
 
     private fun printToLogcat(level: Level, throwable: Throwable) {
-        if (!NoctisInfo.VERBOSE_LOGS && level > Level.WARNING) return
+        if (!MoonlightInfo.VERBOSE_LOGS && level > Level.WARNING) return
         val thMessage = Log.getStackTraceString(throwable)
 
         when (level) {
@@ -222,7 +222,7 @@ object Logger : CoroutineScope {
 
     fun debug(tag: String, msg: String, t: Throwable? = null) {
         // Release builds also strip these calls entirely (proguard-rules.pro)
-        if (NoctisInfo.VERBOSE_LOGS) log(Level.DEBUG, tag, msg, t)
+        if (MoonlightInfo.VERBOSE_LOGS) log(Level.DEBUG, tag, msg, t)
     }
 
     /**
@@ -230,8 +230,8 @@ object Logger : CoroutineScope {
      */
     fun log(level: Level, tag: String, message: String, throwable: Throwable? = null) {
         if (!isInitialized.get()) return
-        // Noctis: debug/trace lines are dropped unless verbose logging is on
-        if (!NoctisInfo.VERBOSE_LOGS && level > Level.INFO) return
+        // Moonlight: debug/trace lines are dropped unless verbose logging is on
+        if (!MoonlightInfo.VERBOSE_LOGS && level > Level.INFO) return
 
         val logMessage = LogMessage(
             time = System.currentTimeMillis(),
@@ -241,7 +241,7 @@ object Logger : CoroutineScope {
             throwable = throwable
         )
 
-        // Noctis: the channel is unbounded, so trySend never fails or blocks. This replaces a
+        // Moonlight: the channel is unbounded, so trySend never fails or blocks. This replaces a
         // coroutine launched per log line (cheaper, and lines keep the order they were written in)
         channel.trySend(logMessage)
     }

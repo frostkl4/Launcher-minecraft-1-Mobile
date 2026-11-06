@@ -281,7 +281,8 @@ class ScreenshotsManageViewModel @Inject constructor(
         file: File
     ) {
         val fileName = file.name
-        val relativePath = Environment.DIRECTORY_PICTURES + "/" + BuildKeys.LAUNCHER_IDENTIFIER + "/"
+        // Moonlight: album named after the display name (LAUNCHER_IDENTIFIER is a storage id)
+        val relativePath = Environment.DIRECTORY_PICTURES + "/" + BuildKeys.LAUNCHER_NAME.replace(" ", "") + "/"
 
         //如果是已存在的文件，则Uri不为null
         val existingUri = queryExistingUri(resolver, fileName, relativePath)

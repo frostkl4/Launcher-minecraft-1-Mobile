@@ -202,7 +202,7 @@ abstract class Launcher(
     }
 
     /**
-     * Noctis: CPU priority (Android "nice" value) for the thread that starts the JVM.
+     * Moonlight: CPU priority (Android "nice" value) for the thread that starts the JVM.
      * Threads created by the JVM (render thread, chunk workers, GC) inherit it.
      * Null keeps the default. Real-time scheduling is not available to apps.
      */
@@ -214,8 +214,8 @@ abstract class Launcher(
         val previous = runCatching { Process.getThreadPriority(tid) }.getOrNull()
         val applied = runCatching { Process.setThreadPriority(target) }.isSuccess
         LoggerBridge.appendInfo(
-            if (applied) "Noctis: game thread priority $target (was $previous)"
-            else "Noctis: Android did not allow a higher game thread priority, keeping the default"
+            if (applied) "Moonlight: game thread priority $target (was $previous)"
+            else "Moonlight: Android did not allow a higher game thread priority, keeping the default"
         )
         try {
             return block()

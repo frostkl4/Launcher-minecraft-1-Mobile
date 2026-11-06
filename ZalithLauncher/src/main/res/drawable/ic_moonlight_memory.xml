@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Moonlight Launcher pixel icon (memory), drawn on a 12x12 grid. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="12"
+    android:viewportHeight="12">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M6 0h3v1h-3zM5 1h3v1h-3zM4 2h3v1h-3zM3 3h3v1h-3zM2 4h7v1h-7zM5 5h3v1h-3zM4 6h3v1h-3zM3 7h3v1h-3zM2 8h3v1h-3zM1 9h3v1h-3zM1 10h2v1h-2z" />
+</vector>

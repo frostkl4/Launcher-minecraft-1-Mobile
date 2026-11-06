@@ -138,7 +138,7 @@ object AllSettings : SettingsRegistry() {
     /**
      * 版本自定义信息
      */
-    val versionCustomInfo = stringSetting("versionCustomInfo", "${BuildKeys.LAUNCHER_IDENTIFIER}[zl_version]")
+    val versionCustomInfo = stringSetting("versionCustomInfo", "${BuildKeys.LAUNCHER_NAME.replace(" ", "")}[zl_version]")
 
     /**
      * 启动器的Java环境
@@ -378,7 +378,7 @@ object AllSettings : SettingsRegistry() {
 
     //Launcher
     /**
-     * Noctis: CurseForge API key pasted by the user. Stays on this device only,
+     * Moonlight: CurseForge API key pasted by the user. Stays on this device only,
      * so it never ends up in the public repository or inside the APK.
      */
     val curseForgeApiKey = stringSetting("noctisCurseForgeApiKey", "")
@@ -389,7 +389,7 @@ object AllSettings : SettingsRegistry() {
      */
     val launcherColorTheme = enumSetting(
         "launcherColorTheme",
-        ColorThemeType.NOCTIS //Noctis: night theme by default
+        ColorThemeType.MOONLIGHT //Moonlight: night theme by default
     )
 
     /**
@@ -405,7 +405,7 @@ object AllSettings : SettingsRegistry() {
     /**
      * 启动器UI深色主题
      */
-    val launcherDarkMode = enumSetting("launcherDarkMode", DarkMode.Enable) //Noctis: dark by default
+    val launcherDarkMode = enumSetting("launcherDarkMode", DarkMode.Enable) //Moonlight: dark by default
 
     /**
      * 启动器语言

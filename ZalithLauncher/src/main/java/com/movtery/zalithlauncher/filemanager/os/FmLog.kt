@@ -111,8 +111,8 @@ object FmLog {
     fun warn(tag: String, msg: String, t: Throwable? = null) = log(FmLogLevel.WARNING, tag, msg, t)
     fun error(tag: String, msg: String, t: Throwable? = null) = log(FmLogLevel.ERROR, tag, msg, t)
     fun debug(tag: String, msg: String, t: Throwable? = null) {
-        // Noctis: file manager debug lines only with verbose logging (also stripped in release)
-        if (com.movtery.zalithlauncher.noctis.NoctisInfo.VERBOSE_LOGS) log(FmLogLevel.DEBUG, tag, msg, t)
+        // Moonlight: file manager debug lines only with verbose logging (also stripped in release)
+        if (com.movtery.zalithlauncher.moonlight.MoonlightInfo.VERBOSE_LOGS) log(FmLogLevel.DEBUG, tag, msg, t)
     }
 
     private fun log(level: FmLogLevel, tag: String, msg: String, t: Throwable?) {
@@ -146,8 +146,8 @@ object FmLog {
     }
 
     private fun printToLogcat(message: FmLogMessage) {
-        // Noctis: logcat only gets warnings and errors unless verbose logging is on
-        if (!com.movtery.zalithlauncher.noctis.NoctisInfo.VERBOSE_LOGS &&
+        // Moonlight: logcat only gets warnings and errors unless verbose logging is on
+        if (!com.movtery.zalithlauncher.moonlight.MoonlightInfo.VERBOSE_LOGS &&
             message.level.ordinal > FmLogLevel.WARNING.ordinal
         ) return
         runCatching {

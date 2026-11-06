@@ -11,7 +11,7 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       variant: Debug
-      # Noctis: on every push build only the 64-bit ARM APK (almost every current phone),
+      # Moonlight: on every push build only the 64-bit ARM APK (almost every current phone),
       # it is much faster. Add "all", "arm", "x86" or "x86_64" to this list for other phones.
       archs: '["arm64"]'
     secrets:

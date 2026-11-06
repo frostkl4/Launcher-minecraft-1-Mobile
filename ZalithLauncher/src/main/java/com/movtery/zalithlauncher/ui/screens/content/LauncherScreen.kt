@@ -1,7 +1,7 @@
 /*
  * Zalith Launcher 2
  * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
- * Modifications Copyright (C) 2026 frostkl4 (Noctis Launcher home screen)
+ * Modifications Copyright (C) 2026 frostkl4 (Moonlight Launcher home screen)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,15 +44,15 @@ import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.game.account.AccountsManager
 import com.movtery.zalithlauncher.game.version.installed.Version
 import com.movtery.zalithlauncher.game.version.installed.VersionsManager
-import com.movtery.zalithlauncher.noctis.ui.home.NoctisHero
-import com.movtery.zalithlauncher.noctis.ui.home.NoctisInstanceCard
-import com.movtery.zalithlauncher.noctis.ui.home.NoctisLibraryHeader
-import com.movtery.zalithlauncher.noctis.ui.home.NoctisLibraryMessage
-import com.movtery.zalithlauncher.noctis.ui.home.NoctisLoaderFilters
-import com.movtery.zalithlauncher.noctis.ui.home.NoctisMemoryDialog
-import com.movtery.zalithlauncher.noctis.ui.home.formatNoctisMemory
-import com.movtery.zalithlauncher.noctis.ui.home.noctisCategory
-import com.movtery.zalithlauncher.noctis.ui.home.rememberEffectiveMemoryMb
+import com.movtery.zalithlauncher.moonlight.ui.home.MoonlightHero
+import com.movtery.zalithlauncher.moonlight.ui.home.MoonlightInstanceCard
+import com.movtery.zalithlauncher.moonlight.ui.home.MoonlightLibraryHeader
+import com.movtery.zalithlauncher.moonlight.ui.home.MoonlightLibraryMessage
+import com.movtery.zalithlauncher.moonlight.ui.home.MoonlightLoaderFilters
+import com.movtery.zalithlauncher.moonlight.ui.home.MoonlightMemoryDialog
+import com.movtery.zalithlauncher.moonlight.ui.home.formatMoonlightMemory
+import com.movtery.zalithlauncher.moonlight.ui.home.moonlightCategory
+import com.movtery.zalithlauncher.moonlight.ui.home.rememberEffectiveMemoryMb
 import com.movtery.zalithlauncher.ui.base.BaseScreen
 import com.movtery.zalithlauncher.ui.components.AnimatedDirection
 import com.movtery.zalithlauncher.ui.components.animated
@@ -68,7 +68,7 @@ private val HeroHeight = 168.dp
 private val CardMinWidth = 150.dp
 
 /**
- * Noctis home (version 1.0, landscape):
+ * Moonlight home (version 1.0, landscape):
  *
  * ```
  * | sidebar | top bar: "Home" · license line          [account chip] |
@@ -108,18 +108,18 @@ fun LauncherScreen(
         var showMemoryDialog by remember { mutableStateOf(false) }
 
         // Loader chips only list what the user has, in library order
-        val categories = remember(versions) { versions.map { it.noctisCategory() }.distinct() }
+        val categories = remember(versions) { versions.map { it.moonlightCategory() }.distinct() }
         val activeCategory = category?.takeIf { it in categories }
         val trimmed = query.trim()
         val filtered = remember(versions, trimmed, activeCategory) {
             versions.asSequence()
-                .filter { activeCategory == null || it.noctisCategory() == activeCategory }
+                .filter { activeCategory == null || it.moonlightCategory() == activeCategory }
                 .filter { trimmed.isEmpty() || it.getVersionName().contains(trimmed, ignoreCase = true) }
                 .distinctBy { it.getVersionName() }
                 .toList()
         }
         val currentName = currentVersion?.getVersionName()
-        val memoryLabel = formatNoctisMemory(rememberEffectiveMemoryMb(currentVersion))
+        val memoryLabel = formatMoonlightMemory(rememberEffectiveMemoryMb(currentVersion))
 
         val toAccountManager: () -> Unit = {
             backStackViewModel.mainScreen.navigateTo(
@@ -146,7 +146,7 @@ fun LauncherScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item(key = "hero", span = fullSpan, contentType = "hero") {
-                NoctisHero(
+                MoonlightHero(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(HeroHeight)
@@ -164,7 +164,7 @@ fun LauncherScreen(
             }
 
             item(key = "header", span = fullSpan, contentType = "header") {
-                NoctisLibraryHeader(
+                MoonlightLibraryHeader(
                     modifier = Modifier
                         .fillMaxWidth()
                         .animated(libraryCtx, from = AnimatedDirection.Bottom),
@@ -177,7 +177,7 @@ fun LauncherScreen(
 
             if (categories.size > 1) {
                 item(key = "filters", span = fullSpan, contentType = "filters") {
-                    NoctisLoaderFilters(
+                    MoonlightLoaderFilters(
                         modifier = Modifier
                             .fillMaxWidth()
                             .animated(libraryCtx, from = AnimatedDirection.Bottom),
@@ -190,24 +190,24 @@ fun LauncherScreen(
 
             when {
                 versions.isEmpty() && isRefreshing -> item(key = "message", span = fullSpan, contentType = "message") {
-                    NoctisLibraryMessage(
+                    MoonlightLibraryMessage(
                         modifier = Modifier.fillMaxWidth(),
-                        text = stringResource(R.string.noctis_home_loading),
+                        text = stringResource(R.string.moonlight_home_loading),
                         showProgress = true
                     )
                 }
                 versions.isEmpty() -> item(key = "message", span = fullSpan, contentType = "message") {
-                    NoctisLibraryMessage(
+                    MoonlightLibraryMessage(
                         modifier = Modifier.fillMaxWidth(),
-                        text = stringResource(R.string.noctis_home_empty_library),
-                        actionText = stringResource(R.string.noctis_home_new_instance),
+                        text = stringResource(R.string.moonlight_home_empty_library),
+                        actionText = stringResource(R.string.moonlight_home_new_instance),
                         onAction = toNewInstance
                     )
                 }
                 filtered.isEmpty() -> item(key = "message", span = fullSpan, contentType = "message") {
-                    NoctisLibraryMessage(
+                    MoonlightLibraryMessage(
                         modifier = Modifier.fillMaxWidth(),
-                        text = stringResource(R.string.noctis_home_no_results, trimmed)
+                        text = stringResource(R.string.moonlight_home_no_results, trimmed)
                     )
                 }
                 else -> items(
@@ -215,7 +215,7 @@ fun LauncherScreen(
                     key = { "instance:" + it.getVersionName() },
                     contentType = { "instance" }
                 ) { version ->
-                    NoctisInstanceCard(
+                    MoonlightInstanceCard(
                         modifier = Modifier.animateItem(),
                         version = version,
                         selected = version.getVersionName() == currentName,
@@ -232,7 +232,7 @@ fun LauncherScreen(
         }
 
         if (showMemoryDialog) {
-            NoctisMemoryDialog(
+            MoonlightMemoryDialog(
                 version = currentVersion,
                 onDismiss = { showMemoryDialog = false }
             )

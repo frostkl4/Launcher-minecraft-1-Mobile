@@ -180,9 +180,9 @@ private fun downloadSingleFile(
 }
 
 fun mapExceptionToMessage(e: Throwable): AndroidStringText {
-    //Noctis: explain the CurseForge key problem instead of a bare "403 Forbidden"
-    if (e is CurseForgeApiKeyMissingException) return androidText(R.string.noctis_curseforge_key_missing)
-    if (e.isCurseForgeKeyRejected()) return androidText(R.string.noctis_curseforge_key_rejected)
+    //Moonlight: explain the CurseForge key problem instead of a bare "403 Forbidden"
+    if (e is CurseForgeApiKeyMissingException) return androidText(R.string.moonlight_curseforge_key_missing)
+    if (e.isCurseForgeKeyRejected()) return androidText(R.string.moonlight_curseforge_key_rejected)
     return when (e) {
         is HttpRequestTimeoutException -> androidText(R.string.error_timeout)
         is UnknownHostException, is UnresolvedAddressException -> androidText(R.string.error_network_unreachable)

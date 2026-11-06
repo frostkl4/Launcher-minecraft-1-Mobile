@@ -32,7 +32,7 @@ import com.movtery.zalithlauncher.coroutine.TaskSystem
 import com.movtery.zalithlauncher.game.account.AccountsManager
 import com.movtery.zalithlauncher.game.path.GamePathManager
 import com.movtery.zalithlauncher.keepalive.TaskKeepAlive
-import com.movtery.zalithlauncher.noctis.image.NoctisImageLoader
+import com.movtery.zalithlauncher.moonlight.image.MoonlightImageLoader
 import com.movtery.zalithlauncher.path.PathManager
 import com.movtery.zalithlauncher.setting.loadAllSettings
 import com.movtery.zalithlauncher.ui.activities.showFatalError
@@ -112,9 +112,9 @@ class ZLApplication : Application(), SingletonImageLoader.Factory {
         refreshContext(this)
     }
 
-    // Noctis: icon and image cache tuned by NoctisImageLoader (memory + disk, sized to the device)
+    // Moonlight: icon and image cache tuned by MoonlightImageLoader (memory + disk, sized to the device)
     override fun newImageLoader(context: PlatformContext): ImageLoader {
-        return NoctisImageLoader.create(context)
+        return MoonlightImageLoader.create(context)
     }
 
     private fun initializeData() {

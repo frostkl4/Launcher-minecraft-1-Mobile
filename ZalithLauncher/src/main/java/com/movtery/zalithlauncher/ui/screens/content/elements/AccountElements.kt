@@ -127,8 +127,8 @@ import com.movtery.zalithlauncher.game.account.isLocalAccount
 import com.movtery.zalithlauncher.game.account.isMicrosoftAccount
 import com.movtery.zalithlauncher.game.account.isSkinChangeAllowed
 import com.movtery.zalithlauncher.game.account.wardrobe.EmptyCape
-import com.movtery.zalithlauncher.noctis.ui.OfflineCapeChange
-import com.movtery.zalithlauncher.noctis.ui.OfflineCapeDialog
+import com.movtery.zalithlauncher.moonlight.ui.OfflineCapeChange
+import com.movtery.zalithlauncher.moonlight.ui.OfflineCapeDialog
 import com.movtery.zalithlauncher.game.account.wardrobe.SkinModelType
 import com.movtery.zalithlauncher.game.account.wardrobe.capeLocalRes
 import com.movtery.zalithlauncher.game.account.wardrobe.toArmModel
@@ -1422,7 +1422,7 @@ fun ChangeSkinDialog(
 ) {
     var showCapeSelector by remember { mutableStateOf(false) }
 
-    //Noctis: offline accounts can pick a cape (file, Ely.by, MinecraftCapes), saved on confirm
+    //Moonlight: offline accounts can pick a cape (file, Ely.by, MinecraftCapes), saved on confirm
     var offlineCapeChange by remember { mutableStateOf<OfflineCapeChange>(OfflineCapeChange.None) }
     var showOfflineCapeDialog by remember { mutableStateOf(false) }
 
@@ -1675,11 +1675,11 @@ fun ChangeSkinDialog(
                                 )
                             }
 
-                            //Noctis: cape for offline accounts
+                            //Moonlight: cape for offline accounts
                             if (account.isLocalAccount()) {
                                 InfoLayoutTextItem(
                                     modifier = Modifier.fillMaxWidth(),
-                                    title = stringResource(R.string.noctis_offline_cape),
+                                    title = stringResource(R.string.moonlight_offline_cape),
                                     icon = {
                                         Icon(
                                             modifier = Modifier.size(22.dp),

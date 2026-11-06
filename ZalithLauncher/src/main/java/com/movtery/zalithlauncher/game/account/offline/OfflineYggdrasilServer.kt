@@ -171,7 +171,7 @@ class OfflineYggdrasilServer(
         val skinBytes = skinFile.takeIf { it.exists() }?.readBytes()
         val skinHash = skinBytes?.let { DigestUtils.digestToString("SHA-256", it) }
 
-        //Noctis: also serve the offline cape (it was never loaded before, so offline capes never showed up)
+        //Moonlight: also serve the offline cape (it was never loaded before, so offline capes never showed up)
         val capeBytes = account.getCapeFile().takeIf { it.exists() }?.readBytes()
         val capeHash = capeBytes?.let { DigestUtils.digestToString("SHA-256", it) }
 

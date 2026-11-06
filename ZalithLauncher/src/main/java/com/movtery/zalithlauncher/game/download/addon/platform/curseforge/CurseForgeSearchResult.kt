@@ -49,7 +49,7 @@ class CurseForgeSearchResult(
             data0 to classes.getTranslations()?.getInfoByCurseForgeId(data0.slug)
         }
         val pageSize = pagination.pageSize.coerceAtLeast(1)
-        //Noctis: pages past the 10,000th result cannot be requested, so do not offer them
+        //Moonlight: pages past the 10,000th result cannot be requested, so do not offer them
         val reachableCount = minOf(pagination.totalCount, CURSEFORGE_MAX_RESULT_WINDOW.toLong())
         val isLastPage = pagination.resultCount < pageSize ||
                 (pagination.index + pagination.resultCount) >= reachableCount

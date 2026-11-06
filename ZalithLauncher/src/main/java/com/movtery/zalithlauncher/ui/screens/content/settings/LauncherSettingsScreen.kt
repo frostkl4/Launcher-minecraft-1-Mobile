@@ -176,7 +176,7 @@ fun LauncherSettingsScreen(
                         },
                         getRadioText = { enum ->
                             when (enum) {
-                                ColorThemeType.NOCTIS -> stringResource(R.string.noctis_theme_name)
+                                ColorThemeType.MOONLIGHT -> stringResource(R.string.moonlight_theme_name)
                                 ColorThemeType.DYNAMIC -> stringResource(R.string.theme_color_dynamic)
                                 ColorThemeType.EMBERMIRE -> stringResource(R.string.theme_color_embermire)
                                 ColorThemeType.VELVET_ROSE -> stringResource(R.string.theme_color_velvet_rose)
@@ -326,7 +326,7 @@ fun LauncherSettingsScreen(
                 }
             }
 
-            //Noctis: CurseForge API key pasted on the phone
+            //Moonlight: CurseForge API key pasted on the phone
             AnimatedItem { ctx ->
                 SettingsCardColumn(
                     modifier = Modifier
@@ -338,15 +338,15 @@ fun LauncherSettingsScreen(
                         modifier = Modifier.fillMaxWidth(),
                         position = CardPosition.Top,
                         unit = AllSettings.curseForgeApiKey,
-                        title = stringResource(R.string.noctis_settings_curseforge_key_title),
-                        summary = stringResource(R.string.noctis_settings_curseforge_key_summary),
-                        label = stringResource(R.string.noctis_settings_curseforge_key_label)
+                        title = stringResource(R.string.moonlight_settings_curseforge_key_title),
+                        summary = stringResource(R.string.moonlight_settings_curseforge_key_summary),
+                        label = stringResource(R.string.moonlight_settings_curseforge_key_label)
                     )
                     SettingsCard(
                         modifier = Modifier.fillMaxWidth(),
                         position = CardPosition.Bottom,
-                        title = stringResource(R.string.noctis_settings_curseforge_key_get_title),
-                        summary = stringResource(R.string.noctis_settings_curseforge_key_get_summary),
+                        title = stringResource(R.string.moonlight_settings_curseforge_key_get_title),
+                        summary = stringResource(R.string.moonlight_settings_curseforge_key_get_summary),
                         onClick = { uriHandler.openUri("https://console.curseforge.com/") }
                     )
                 }

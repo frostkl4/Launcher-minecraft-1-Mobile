@@ -19,6 +19,8 @@ val zalithPackageName = "com.movtery.zalithlauncher"
 val launcherAPPName = project.findProperty("launcher_app_name") as? String ?: error("The \"launcher_app_name\" property is not set in gradle.properties.")
 val launcherName = project.findProperty("launcher_name") as? String ?: error("The \"launcher_name\" property is not set in gradle.properties.")
 val launcherShortName = project.findProperty("launcher_short_name") as? String ?: error("The \"launcher_short_name\" property is not set in gradle.properties.")
+// Moonlight: APK file name, separate from launcher_name (which is a storage id)
+val launcherFileName = project.findProperty("launcher_file_name") as? String ?: launcherName
 val launcherUrl = project.findProperty("url_home") as? String ?: error("The \"url_home\" property is not set in gradle.properties.")
 
 val launcherVersionCode = (project.findProperty("launcher_version_code") as? String)?.toIntOrNull() ?: error("The \"launcher_version_code\" property is not set as an integer in gradle.properties.")
@@ -120,9 +122,9 @@ android {
             keyAlias = "movtery_zalith"
             keyPassword = getKeyFromLocal("KEY_PASSWORD", ".key_password.txt")
         }
-        // Noctis: official release key. The release workflow decodes it from the repository
+        // Moonlight: official release key. The release workflow decodes it from the repository
         // secrets into a temporary file and passes its path here; it is never committed.
-        create("noctisRelease") {
+        create("moonlightRelease") {
             val keystorePath = System.getenv("NOCTIS_KEYSTORE_FILE")
             if (!keystorePath.isNullOrBlank()) {
                 val password = System.getenv("NOCTIS_KEYSTORE_PASSWORD").orEmpty()
@@ -142,7 +144,9 @@ android {
     }
 
     defaultConfig {
-        // Noctis: own application id so it installs side by side with the official app
+        // Own application id so it installs side by side with the official app.
+        // Kept from the first public release (v0.1.0, as Noctis): changing it would turn
+        // every update into a separate app and lose the user's data.
         applicationId = "io.github.frostkl4.noctis"
         minSdk = 26
         targetSdk = 34
@@ -155,9 +159,9 @@ android {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
-            // Noctis: sign with the Noctis key when the release workflow provides it
+            // Moonlight: sign with the Moonlight key when the release workflow provides it
             signingConfig = if (!System.getenv("NOCTIS_KEYSTORE_FILE").isNullOrBlank()) {
-                signingConfigs.getByName("noctisRelease")
+                signingConfigs.getByName("moonlightRelease")
             } else {
                 signingConfigs.getByName("releaseBuild")
             }
@@ -294,7 +298,7 @@ androidComponents {
                 }
 
                 (output.getFilter(ABI)?.identifier ?: "all").let { abi ->
-                    val baseName = "$launcherName-${if (variant.buildType == "release") launcherVersionName else "Debug-$launcherVersionName"}"
+                    val baseName = "$launcherFileName-${if (variant.buildType == "release") launcherVersionName else "Debug-$launcherVersionName"}"
                     output.outputFileName = if (abi == "all") "$baseName.apk" else "$baseName-$abi.apk"
                 }
             }

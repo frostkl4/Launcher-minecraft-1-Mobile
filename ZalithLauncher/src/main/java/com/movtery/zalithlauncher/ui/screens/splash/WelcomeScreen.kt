@@ -486,7 +486,7 @@ private fun ProductBanner(
     ) {
         Image(
             modifier = Modifier.size(52.dp),
-            painter = painterResource(R.drawable.img_noctis_logo),
+            painter = painterResource(R.drawable.img_moonlight_logo),
             contentDescription = null
         )
 

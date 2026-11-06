@@ -80,7 +80,7 @@ private fun isCurseForgeHost(host: String): Boolean =
 private val CURSEFORGE_INTERCEPTOR = Interceptor { chain ->
     val request = chain.request()
     if (isCurseForgeHost(request.url.host)) {
-        val apiKey = currentCurseForgeApiKey() //Noctis: key from settings or build
+        val apiKey = currentCurseForgeApiKey() //Moonlight: key from settings or build
         if (apiKey.isNotBlank()) {
             val newRequest = request.newBuilder()
                 .header("x-api-key", apiKey)
@@ -145,7 +145,7 @@ val GLOBAL_CLIENT = HttpClient(OkHttp) {
 }.apply {
     requestPipeline.intercept(HttpRequestPipeline.State) {
         if (isCurseForgeHost(context.url.host)) {
-            val apiKey = currentCurseForgeApiKey() //Noctis: key from settings or build
+            val apiKey = currentCurseForgeApiKey() //Moonlight: key from settings or build
             if (apiKey.isNotBlank()) {
                 context.header("x-api-key", apiKey)
             }

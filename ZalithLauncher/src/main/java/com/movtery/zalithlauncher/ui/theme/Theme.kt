@@ -622,7 +622,7 @@ fun ZalithLauncherTheme(
             }
 
             darkTheme -> when (colorTheme) {
-                ColorThemeType.NOCTIS -> noctisDarkScheme
+                ColorThemeType.MOONLIGHT -> moonlightDarkScheme
                 ColorThemeType.EMBERMIRE -> embermireDark
                 ColorThemeType.VELVET_ROSE -> velvetRoseDark
                 ColorThemeType.MISTWAVE -> mistwaveDark
@@ -638,7 +638,7 @@ fun ZalithLauncherTheme(
             }
 
             else -> when (colorTheme) {
-                ColorThemeType.NOCTIS -> noctisLightScheme
+                ColorThemeType.MOONLIGHT -> moonlightLightScheme
                 ColorThemeType.EMBERMIRE -> embermireLight
                 ColorThemeType.VELVET_ROSE -> velvetRoseLight
                 ColorThemeType.MISTWAVE -> mistwaveLight

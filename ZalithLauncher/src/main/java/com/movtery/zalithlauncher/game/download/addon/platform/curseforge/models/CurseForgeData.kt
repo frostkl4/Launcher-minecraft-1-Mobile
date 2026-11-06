@@ -335,7 +335,7 @@ class CurseForgeData(
         it.name.takeIf { it.isNotEmpty() }
     }.takeIf { it.isNotEmpty() }
 
-    // Noctis: lists show the 256 px thumbnail instead of the full-size logo (often 1-2 MB),
+    // Moonlight: lists show the 256 px thumbnail instead of the full-size logo (often 1-2 MB),
     // the original is only a fallback
     override fun platformIconUrl(): String? =
         logo?.thumbnailUrl?.takeIf { it.isNotBlank() } ?: logo?.url

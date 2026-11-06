@@ -1,5 +1,5 @@
 /*
- * Noctis Launcher — unofficial modified version of Zalith Launcher 2
+ * Moonlight Launcher — unofficial modified version of Zalith Launcher 2
  * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  * Modifications Copyright (C) 2026 frostkl4
  *

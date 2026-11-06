@@ -59,7 +59,7 @@
 
 # SoraEditor language-textmate
 -keep class org.jcodings.** { *; }
-# Noctis 1.0: release builds drop debug and verbose log calls, together with the
+# Moonlight 1.0: release builds drop debug and verbose log calls, together with the
 # strings built only for them. Info, warnings and errors stay for crash reports.
 -assumenosideeffects class android.util.Log {
     public static int d(...);
