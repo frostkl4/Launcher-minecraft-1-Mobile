@@ -73,4 +73,50 @@
     <string name="moonlight_home_memory_button">Memory: %1$s, tap to change</string>
     <string name="moonlight_home_memory_title">Game memory</string>
     <string name="moonlight_home_switch_account">Switch account: %1$s</string>
+    <!-- Store-style search (mods, modpacks, shaders, textures, worlds) -->
+    <string name="moonlight_store_search_mods">Search mods</string>
+    <string name="moonlight_store_search_modpacks">Search modpacks</string>
+    <string name="moonlight_store_search_resource_packs">Search resource packs</string>
+    <string name="moonlight_store_search_worlds">Search worlds</string>
+    <string name="moonlight_store_search_shaders">Search shaders</string>
+    <string name="moonlight_store_filters">Filters</string>
+    <string name="moonlight_store_filters_count">Filters (%1$d)</string>
+    <string name="moonlight_store_clear">Clear</string>
+    <string name="moonlight_store_show_results">Show results</string>
+    <string name="moonlight_store_close_filters">Close filters</string>
+    <string name="moonlight_store_by">by %1$s</string>
+    <string name="moonlight_store_install">Install</string>
+    <string name="moonlight_store_installed">Installed</string>
+    <string name="moonlight_store_install_project">Install %1$s</string>
+    <string name="moonlight_store_no_results">Nothing found. Try another name or fewer filters.</string>
+    <string name="moonlight_store_platform">Platform</string>
+
+    <!-- Version installer -->
+    <string name="moonlight_install_title">New instance</string>
+    <string name="moonlight_install_loader">Loader</string>
+    <string name="moonlight_install_vanilla">Vanilla</string>
+    <string name="moonlight_install_search">Search version</string>
+    <string name="moonlight_install_snapshots">Snapshots</string>
+    <string name="moonlight_install_loading_versions">Loading versions…</string>
+    <string name="moonlight_install_versions_failed">Could not load the versions. Tap to try again.</string>
+    <string name="moonlight_install_pick_version">Pick a Minecraft version</string>
+    <string name="moonlight_install_name">Instance name</string>
+    <string name="moonlight_install_name_exists">An instance with this name already exists</string>
+    <string name="moonlight_install_name_invalid">This name has characters that cannot be used</string>
+    <string name="moonlight_install_loader_version">%1$s version</string>
+    <string name="moonlight_install_loader_latest">%1$s (latest)</string>
+    <string name="moonlight_install_loader_loading">Looking for %1$s versions…</string>
+    <string name="moonlight_install_loader_none">%1$s has no version for Minecraft %2$s</string>
+    <string name="moonlight_install_loader_failed">Could not load %1$s versions</string>
+    <string name="moonlight_install_performance">Performance mods</string>
+    <string name="moonlight_install_performance_summary">Sodium and Lithium, the newest versions for this Minecraft</string>
+    <string name="moonlight_install_performance_unavailable">Not available for %1$s</string>
+    <string name="moonlight_install_performance_partial">Only %1$s exists for this version</string>
+    <string name="moonlight_install_fabric_api">Fabric API</string>
+    <string name="moonlight_install_fabric_api_summary">Needed by most Fabric mods</string>
+    <string name="moonlight_install_button">Install</string>
+    <string name="moonlight_install_advanced">More options</string>
+    <string name="moonlight_install_progress">Installing…</string>
+    <string name="moonlight_install_cancel">Cancel</string>
+    <string name="moonlight_install_close">Close</string>
 </resources>

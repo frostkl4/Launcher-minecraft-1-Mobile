@@ -44,6 +44,7 @@ import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDe
 import androidx.navigation3.runtime.entryProvider
 import com.google.gson.JsonSyntaxException
 import com.movtery.zalithlauncher.R
+import com.movtery.zalithlauncher.moonlight.install.MoonlightInstallScreen
 import com.movtery.zalithlauncher.game.download.game.GameDownloadInfo
 import com.movtery.zalithlauncher.game.download.game.GameInstaller
 import com.movtery.zalithlauncher.game.download.game.optifine.CantFetchingOptiFineUrlException
@@ -102,6 +103,9 @@ private class GameDownloadViewModel: ViewModel() {
      */
     var versionNameErrorCheck by mutableStateOf(false)
     var installOperation by mutableStateOf<GameInstallOperation>(GameInstallOperation.None)
+
+    /** Moonlight: the install was started from the new installer, which shows the progress itself */
+    var inlineProgress by mutableStateOf(false)
 
     /**
      * 游戏安装器
@@ -195,6 +199,7 @@ fun DownloadGameScreen(
         gameInstallOperation = viewModel.installOperation,
         updateOperation = { viewModel.installOperation = it },
         installer = viewModel.installer,
+        showProgressDialog = !viewModel.inlineProgress,
         onInstall = { info ->
             viewModel.install(
                 context = context,
@@ -228,21 +233,29 @@ fun DownloadGameScreen(
             popTransitionSpec = rememberTransitionSpec(),
             entryProvider = entryProvider {
                 entry<NormalNavKey.DownloadGame.SelectGameVersion> {
-                    SelectGameVersionScreen(
-                        host = SelectGameVersionHost.Download(
-                            mainScreenKey = mainScreenKey,
-                            downloadScreenKey = downloadScreenKey,
-                            downloadGameScreenKey = downloadGameScreenKey
-                        ),
-                        eventViewModel = eventViewModel,
-                    ) { version ->
-                        backStack.navigateTo(
-                            NormalNavKey.DownloadGame.Addons(
-                                gameVersion = version.version.id,
-                                type = version.type,
+                    // Moonlight: loader type, version grid and an install panel with inline progress
+                    val context = LocalContext.current
+                    MoonlightInstallScreen(
+                        mainScreenKey = mainScreenKey,
+                        downloadScreenKey = downloadScreenKey,
+                        downloadGameScreenKey = downloadGameScreenKey,
+                        installer = viewModel.installer,
+                        onInstall = { info ->
+                            requestInstall(context, viewModel, eventViewModel, info, inline = true)
+                        },
+                        onCancelInstall = {
+                            viewModel.cancel()
+                            eventViewModel.sendKeepScreen(false)
+                        },
+                        onAdvanced = { version ->
+                            backStack.navigateTo(
+                                NormalNavKey.DownloadGame.Addons(
+                                    gameVersion = version.version.id,
+                                    type = version.type,
+                                )
                             )
-                        )
-                    }
+                        }
+                    )
                 }
                 entry<NormalNavKey.DownloadGame.Addons> { key ->
                     val context = LocalContext.current
@@ -253,30 +266,7 @@ fun DownloadGameScreen(
                         key = key,
                         refreshErrorCheck = viewModel.versionNameErrorCheck
                     ) { info ->
-                        if (viewModel.installOperation !is GameInstallOperation.None) {
-                            //不是待安装状态，拒绝此次安装
-                            return@DownloadGameWithAddonScreen
-                        }
-                        if (!NotificationManager.checkNotificationEnabled(context)) {
-                            //警告通知权限
-                            viewModel.installOperation = GameInstallOperation.WarningForNotification(info)
-                        } else {
-                            if (isUsingMobileData(context)) {
-                                //警告正在使用流量
-                                viewModel.installOperation = GameInstallOperation.WarningForMobileData(info)
-                            } else {
-                                viewModel.install(
-                                    context = context,
-                                    info = info,
-                                    onStart = {
-                                        eventViewModel.sendKeepScreen(true)
-                                    },
-                                    onStop = {
-                                        eventViewModel.sendKeepScreen(false)
-                                    }
-                                )
-                            }
-                        }
+                        requestInstall(context, viewModel, eventViewModel, info, inline = false)
                     }
                 }
             }
@@ -286,11 +276,48 @@ fun DownloadGameScreen(
     }
 }
 
+/**
+ * Starts an install after the usual checks (notification permission, mobile data).
+ * @param inline true when the screen that asked shows the progress itself
+ */
+private fun requestInstall(
+    context: Context,
+    viewModel: GameDownloadViewModel,
+    eventViewModel: EventViewModel,
+    info: GameDownloadInfo,
+    inline: Boolean,
+) {
+    if (viewModel.installOperation !is GameInstallOperation.None) {
+        //不是待安装状态，拒绝此次安装
+        return
+    }
+    viewModel.inlineProgress = inline
+    if (!NotificationManager.checkNotificationEnabled(context)) {
+        //警告通知权限
+        viewModel.installOperation = GameInstallOperation.WarningForNotification(info)
+    } else if (isUsingMobileData(context)) {
+        //警告正在使用流量
+        viewModel.installOperation = GameInstallOperation.WarningForMobileData(info)
+    } else {
+        viewModel.install(
+            context = context,
+            info = info,
+            onStart = {
+                eventViewModel.sendKeepScreen(true)
+            },
+            onStop = {
+                eventViewModel.sendKeepScreen(false)
+            }
+        )
+    }
+}
+
 @Composable
 private fun GameInstallOperation(
     gameInstallOperation: GameInstallOperation,
     updateOperation: (GameInstallOperation) -> Unit = {},
     installer: GameInstaller?,
+    showProgressDialog: Boolean = true,
     onInstall: (GameDownloadInfo) -> Unit,
     onCancel: () -> Unit
 ) {
@@ -327,7 +354,7 @@ private fun GameInstallOperation(
             )
         }
         is GameInstallOperation.Install -> {
-            if (installer != null) {
+            if (installer != null && showProgressDialog) {
                 val installGame = installer.tasksFlow.collectAsStateWithLifecycle()
                 val installLog = installer.logOutput.collectAsStateWithLifecycle()
                 if (installGame.value.isNotEmpty()) {

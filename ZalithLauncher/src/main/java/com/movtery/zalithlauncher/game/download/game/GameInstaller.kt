@@ -558,6 +558,15 @@ class GameInstaller(
                 modVer = apiVersion.displayName
             )
         }
+
+        // Moonlight: performance mods chosen in the installer (Sodium, Lithium)
+        info.extraMods.forEach { extra ->
+            addMod(
+                mod = extra.version,
+                modName = extra.name,
+                modVer = extra.version.displayName
+            )
+        }
     }
 
     fun cancelInstall(

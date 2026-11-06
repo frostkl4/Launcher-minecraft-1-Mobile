@@ -233,7 +233,7 @@ fun ResultListLayout(
 }
 
 @Composable
-private fun PageController(
+fun PageController(
     modifier: Modifier = Modifier,
     page: AddonPage,
     shape: Shape = MaterialTheme.shapes.large,

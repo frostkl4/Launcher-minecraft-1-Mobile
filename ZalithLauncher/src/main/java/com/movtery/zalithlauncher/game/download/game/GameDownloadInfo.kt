@@ -40,4 +40,15 @@ data class GameDownloadInfo(
     val legacyFabricAPI: ModVersion? = null,
     val quilt: QuiltVersion? = null,
     val quiltAPI: ModVersion? = null,
+    /** Moonlight: extra mods put in the new instance (performance mods: Sodium, Lithium) */
+    val extraMods: List<GameExtraMod> = emptyList(),
+)
+
+/**
+ * Moonlight: a mod downloaded into the new instance together with the game.
+ * @param name name shown in the install progress ("Sodium")
+ */
+data class GameExtraMod(
+    val name: String,
+    val version: ModVersion,
 )
