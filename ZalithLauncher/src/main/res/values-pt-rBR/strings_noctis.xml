@@ -34,8 +34,8 @@
     <string name="noctis_home_change_skin">Trocar skin</string>
 
     <!-- CurseForge -->
-    <string name="noctis_curseforge_key_missing">O CurseForge não funciona nesta versão porque ela foi compilada sem chave de API. Adicione o secret CURSEFORGE_API_KEY no repositório do GitHub e compile de novo. O Modrinth funciona sem chave.</string>
-    <string name="noctis_curseforge_key_rejected">O CurseForge recusou a chave de API (403). Confira o secret CURSEFORGE_API_KEY no repositório do GitHub.</string>
+    <string name="noctis_curseforge_key_missing">O CurseForge não funciona nesta versão porque ela foi compilada sem chave de API. Adicione o secret CURSEFORGE_API_KEY no repositório do GitHub e compile de novo. O Modrinth funciona sem chave</string>
+    <string name="noctis_curseforge_key_rejected">O CurseForge recusou a chave de API (403). Confira o secret CURSEFORGE_API_KEY no repositório do GitHub</string>
 
     <!-- Capas offline -->
     <string name="noctis_offline_cape">Capa</string>
