@@ -23,6 +23,7 @@ import android.app.ActivityManager
 import android.content.Context
 import coil3.ImageLoader
 import coil3.PlatformContext
+import coil3.annotation.ExperimentalCoilApi
 import coil3.disk.DiskCache
 import coil3.gif.GifDecoder
 import coil3.memory.MemoryCache
@@ -62,6 +63,7 @@ object NoctisImageLoader {
     private const val DISK_MIN_BYTES = 64L * 1024 * 1024
     private const val DISK_MAX_BYTES = 384L * 1024 * 1024
 
+    @OptIn(ExperimentalCoilApi::class) // Ktor network fetcher
     fun create(context: Context): ImageLoader {
         val lowRam = (context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager)
             ?.isLowRamDevice == true
