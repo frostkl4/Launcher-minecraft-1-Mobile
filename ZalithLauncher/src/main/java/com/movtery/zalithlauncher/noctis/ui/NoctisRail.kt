@@ -19,6 +19,8 @@
 
 package com.movtery.zalithlauncher.noctis.ui
 
+import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -52,7 +54,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -63,145 +66,160 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.movtery.zalithlauncher.R
 
-/** Where the rail is pointing right now. */
-enum class NoctisDestination { Home, Download, Multiplayer, Settings, Other }
+/** Where the sidebar is pointing right now. */
+enum class NoctisDestination { Home, Library, Explore, Skins, Multiplayer, Settings, Other }
+
+private class RailEntry(
+    val destination: NoctisDestination,
+    @param:DrawableRes val icon: Int,
+    @param:StringRes val label: Int,
+)
+
+/** Main destinations, top to bottom. Settings is pinned to the bottom separately. */
+private val RailEntries = listOf(
+    RailEntry(NoctisDestination.Home, R.drawable.ic_noctis_home, R.string.noctis_rail_home),
+    RailEntry(NoctisDestination.Library, R.drawable.ic_noctis_library, R.string.noctis_rail_library),
+    RailEntry(NoctisDestination.Explore, R.drawable.ic_noctis_explore, R.string.noctis_rail_explore),
+    RailEntry(NoctisDestination.Skins, R.drawable.ic_noctis_skins, R.string.noctis_rail_skins),
+    RailEntry(NoctisDestination.Multiplayer, R.drawable.ic_noctis_multiplayer, R.string.noctis_rail_multiplayer),
+)
 
 private val RailItemSize = 44.dp
 private val RailItemShape = RoundedCornerShape(14.dp)
 
 /**
- * Vertical navigation rail that replaces the original top bar.
- * Phones in landscape have little height, so all navigation lives on the left edge.
+ * Left sidebar of the launcher (SKLauncher / Modrinth App style).
+ *
+ * Phones in landscape have little height, so every destination lives on the
+ * left edge and the content gets the whole height. On very short screens the
+ * column scrolls instead of clipping; otherwise Settings stays pinned to the bottom.
+ *
+ * @param translucent true when the user has a custom wallpaper behind the launcher
  */
 @Composable
 fun NoctisRail(
     current: NoctisDestination,
     isHome: Boolean,
     hasTasks: Boolean,
+    translucent: Boolean,
     onBack: () -> Unit,
-    onHome: () -> Unit,
-    onDownload: () -> Unit,
-    onMultiplayer: () -> Unit,
-    onFiles: () -> Unit,
-    onSettings: () -> Unit,
+    onNavigate: (NoctisDestination) -> Unit,
     onTasks: () -> Unit,
     modifier: Modifier = Modifier,
-    width: Dp = 68.dp,
+    width: Dp = 72.dp,
 ) {
+    val railColor = MaterialTheme.colorScheme.surfaceContainerLowest.let {
+        if (translucent) it.copy(alpha = 0.72f) else it
+    }
+    val edgeColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
+
     BoxWithConstraints(
         modifier = modifier
             .fillMaxHeight()
             .width(width)
-            .background(MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.72f))
+            .background(railColor)
+            .drawBehind {
+                // 1px divider on the content side
+                val x = size.width - 0.5f
+                drawLine(edgeColor, Offset(x, 0f), Offset(x, size.height), strokeWidth = 1f)
+            }
     ) {
-    // Scrolls only on very short screens; otherwise settings stays pinned to the bottom
-    Column(
-        modifier = Modifier
-            .verticalScroll(rememberScrollState())
-            .heightIn(min = maxHeight)
-            .width(width)
-            .padding(vertical = 10.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        // Logo on the home screen, back arrow everywhere else
-        AnimatedContent(
-            targetState = isHome,
-            transitionSpec = { (fadeIn() + scaleIn(initialScale = 0.8f)) togetherWith (fadeOut() + scaleOut(targetScale = 0.8f)) },
-            label = "railTop"
-        ) { home ->
-            if (home) {
-                Image(
+        Column(
+            modifier = Modifier
+                .verticalScroll(rememberScrollState())
+                .heightIn(min = maxHeight)
+                .width(width)
+                .padding(vertical = 10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            // Logo on the home screen, back arrow everywhere else
+            AnimatedContent(
+                targetState = isHome,
+                transitionSpec = {
+                    (fadeIn() + scaleIn(initialScale = 0.8f)) togetherWith (fadeOut() + scaleOut(targetScale = 0.8f))
+                },
+                label = "railTop"
+            ) { home ->
+                if (home) {
+                    Image(
+                        modifier = Modifier
+                            .size(RailItemSize)
+                            .clip(RailItemShape),
+                        painter = painterResource(R.drawable.img_noctis_logo),
+                        contentDescription = null
+                    )
+                } else {
+                    RailButton(
+                        icon = R.drawable.ic_arrow_back,
+                        label = stringResource(R.string.noctis_rail_back),
+                        selected = false,
+                        role = Role.Button,
+                        onClick = onBack
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(6.dp))
+
+            RailEntries.forEach { entry ->
+                RailButton(
+                    icon = entry.icon,
+                    label = stringResource(entry.label),
+                    selected = current == entry.destination,
+                    onClick = { onNavigate(entry.destination) }
+                )
+            }
+
+            Spacer(Modifier.weight(1f))
+
+            AnimatedVisibility(visible = hasTasks) {
+                Box(
                     modifier = Modifier
                         .size(RailItemSize)
-                        .clip(RailItemShape),
-                    painter = painterResource(R.drawable.img_noctis_logo),
-                    contentDescription = null
-                )
-            } else {
-                RailButton(
-                    painter = painterResource(R.drawable.ic_arrow_back),
-                    label = stringResource(R.string.noctis_rail_back),
-                    selected = false,
-                    onClick = onBack
-                )
+                        .clip(RailItemShape)
+                        .clickable(role = Role.Button, onClick = onTasks),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(28.dp),
+                        strokeWidth = 3.dp,
+                        color = MaterialTheme.colorScheme.tertiary
+                    )
+                    Icon(
+                        modifier = Modifier.size(14.dp),
+                        painter = painterResource(R.drawable.ic_noctis_tasks),
+                        contentDescription = stringResource(R.string.noctis_rail_tasks),
+                        tint = MaterialTheme.colorScheme.tertiary
+                    )
+                }
             }
+
+            RailButton(
+                icon = R.drawable.ic_noctis_settings,
+                label = stringResource(R.string.generic_setting),
+                selected = current == NoctisDestination.Settings,
+                onClick = { onNavigate(NoctisDestination.Settings) }
+            )
         }
-
-        Spacer(Modifier.height(8.dp))
-
-        RailButton(
-            painter = painterResource(R.drawable.ic_home_filled),
-            label = stringResource(R.string.noctis_rail_home),
-            selected = current == NoctisDestination.Home,
-            onClick = onHome
-        )
-        RailButton(
-            painter = painterResource(R.drawable.ic_download_2_filled),
-            label = stringResource(R.string.generic_download),
-            selected = current == NoctisDestination.Download,
-            onClick = onDownload
-        )
-        RailButton(
-            painter = painterResource(R.drawable.ic_group_filled),
-            label = stringResource(R.string.terracotta),
-            selected = current == NoctisDestination.Multiplayer,
-            onClick = onMultiplayer
-        )
-        RailButton(
-            painter = painterResource(R.drawable.ic_folder_filled),
-            label = stringResource(R.string.noctis_rail_files),
-            selected = false,
-            onClick = onFiles
-        )
-
-        Spacer(Modifier.weight(1f))
-
-        AnimatedVisibility(visible = hasTasks) {
-            Box(
-                modifier = Modifier
-                    .size(RailItemSize)
-                    .clip(RailItemShape)
-                    .clickable(role = Role.Button, onClick = onTasks),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(26.dp),
-                    strokeWidth = 3.dp
-                )
-                Icon(
-                    modifier = Modifier.size(14.dp),
-                    painter = painterResource(R.drawable.ic_assignment_filled),
-                    contentDescription = stringResource(R.string.noctis_rail_tasks)
-                )
-            }
-        }
-
-        RailButton(
-            painter = painterResource(R.drawable.ic_settings_filled),
-            label = stringResource(R.string.generic_setting),
-            selected = current == NoctisDestination.Settings,
-            onClick = onSettings
-        )
-    }
     }
 }
 
 @Composable
 private fun RailButton(
-    painter: Painter,
+    @DrawableRes icon: Int,
     label: String,
     selected: Boolean,
     onClick: () -> Unit,
+    role: Role = Role.Tab,
 ) {
+    val accent = MaterialTheme.colorScheme.secondary
     val container by animateColorAsState(
-        targetValue = if (selected) MaterialTheme.colorScheme.secondaryContainer
-        else MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0f),
+        targetValue = accent.copy(alpha = if (selected) 0.16f else 0f),
         label = "railContainer"
     )
     val content by animateColorAsState(
-        targetValue = if (selected) MaterialTheme.colorScheme.onSecondaryContainer
-        else MaterialTheme.colorScheme.onSurfaceVariant,
+        targetValue = if (selected) accent else MaterialTheme.colorScheme.onSurfaceVariant,
         label = "railContent"
     )
     Box(
@@ -209,16 +227,16 @@ private fun RailButton(
             .size(RailItemSize)
             .clip(RailItemShape)
             .background(container)
-            .clickable(role = Role.Tab, onClick = onClick)
+            .clickable(role = role, onClick = onClick)
             .semantics {
-                this.selected = selected
+                if (role == Role.Tab) this.selected = selected
                 contentDescription = label
             },
         contentAlignment = Alignment.Center
     ) {
         Icon(
-            modifier = Modifier.size(22.dp),
-            painter = painter,
+            modifier = Modifier.size(24.dp),
+            painter = painterResource(icon),
             tint = content,
             contentDescription = null
         )

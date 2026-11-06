@@ -34,4 +34,11 @@ object NoctisInfo {
      * different app, so the automatic check on start stays off.
      */
     const val CHECK_UPSTREAM_UPDATES_ON_START = false
+
+    /**
+     * Debug and trace log lines of the launcher and the file manager.
+     * Off for release: only info, warnings and errors are written to the log files,
+     * and only warnings and errors go to logcat. Turn on only to investigate a bug.
+     */
+    const val VERBOSE_LOGS = false
 }

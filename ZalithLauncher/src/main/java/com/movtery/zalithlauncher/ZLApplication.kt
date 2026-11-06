@@ -25,13 +25,6 @@ import android.util.Log
 import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
-import coil3.disk.DiskCache
-import coil3.gif.GifDecoder
-import coil3.memory.MemoryCache
-import coil3.network.ktor3.KtorNetworkFetcherFactory
-import coil3.request.CachePolicy
-import coil3.request.crossfade
-import coil3.svg.SvgDecoder
 import com.kyant.fishnet.Fishnet
 import com.movtery.zalithlauncher.context.GlobalContext
 import com.movtery.zalithlauncher.context.refreshContext
@@ -39,7 +32,7 @@ import com.movtery.zalithlauncher.coroutine.TaskSystem
 import com.movtery.zalithlauncher.game.account.AccountsManager
 import com.movtery.zalithlauncher.game.path.GamePathManager
 import com.movtery.zalithlauncher.keepalive.TaskKeepAlive
-import com.movtery.zalithlauncher.path.IMAGE_LOADER_CLIENT
+import com.movtery.zalithlauncher.noctis.image.NoctisImageLoader
 import com.movtery.zalithlauncher.path.PathManager
 import com.movtery.zalithlauncher.setting.loadAllSettings
 import com.movtery.zalithlauncher.ui.activities.showFatalError
@@ -50,7 +43,6 @@ import com.movtery.zalithlauncher.utils.network.TLSSecurity
 import com.movtery.zalithlauncher.utils.writeCrashFile
 import com.tencent.mmkv.MMKV
 import dagger.hilt.android.HiltAndroidApp
-import okio.Path.Companion.toOkioPath
 import kotlin.properties.Delegates
 
 @HiltAndroidApp
@@ -120,29 +112,9 @@ class ZLApplication : Application(), SingletonImageLoader.Factory {
         refreshContext(this)
     }
 
+    // Noctis: icon and image cache tuned by NoctisImageLoader (memory + disk, sized to the device)
     override fun newImageLoader(context: PlatformContext): ImageLoader {
-        return ImageLoader.Builder(context)
-            .memoryCachePolicy(CachePolicy.ENABLED)
-            .memoryCache {
-                MemoryCache.Builder()
-                    .maxSizeBytes(20L * 1024 * 1024) // 20MB
-                    .weakReferencesEnabled(true) //弱引用
-                    .build()
-            }
-            .diskCachePolicy(CachePolicy.ENABLED)
-            .diskCache {
-                DiskCache.Builder()
-                    .maxSizeBytes(512L * 1024 * 1024) // 512MB
-                    .directory(PathManager.DIR_IMAGE_CACHE.toOkioPath())
-                    .build()
-            }
-            .components {
-                add(KtorNetworkFetcherFactory(IMAGE_LOADER_CLIENT))
-                add(GifDecoder.Factory())
-                add(SvgDecoder.Factory())
-            }
-            .crossfade(true)
-            .build()
+        return NoctisImageLoader.create(context)
     }
 
     private fun initializeData() {

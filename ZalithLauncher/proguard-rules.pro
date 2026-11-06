@@ -59,3 +59,17 @@
 
 # SoraEditor language-textmate
 -keep class org.jcodings.** { *; }
+# Noctis 1.0: release builds drop debug and verbose log calls, together with the
+# strings built only for them. Info, warnings and errors stay for crash reports.
+-assumenosideeffects class android.util.Log {
+    public static int d(...);
+    public static int v(...);
+}
+-assumenosideeffects class com.movtery.zalithlauncher.utils.logging.Logger {
+    public void debug(...);
+    public static void debug$default(...);
+}
+-assumenosideeffects class com.movtery.zalithlauncher.filemanager.os.FmLog {
+    public void debug(...);
+    public static void debug$default(...);
+}

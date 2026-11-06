@@ -75,7 +75,6 @@ public class TerracottaVPNService extends VpnService {
         running = true;
 
         String action = intent != null ? intent.getAction() : null;
-        Log.d(TAG, "onStartCommand, action = " + action);
 
         if (notificationManager == null) {
             notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
@@ -153,7 +152,6 @@ public class TerracottaVPNService extends VpnService {
 
     @Override
     public void onDestroy() {
-        Log.d(TAG, "onDestroy(): vpn service finished");
         isStopping = true;
         Terracotta.INSTANCE.setWaiting(false);
         cleanup();
@@ -229,7 +227,6 @@ public class TerracottaVPNService extends VpnService {
     }
 
     private void cleanup() {
-        Log.d(TAG, "cleanup(): close tun & cancel notification");
 
         if (notificationManager != null) {
             notificationManager.cancel(VPN_NOTIFICATION_ID);

@@ -381,12 +381,21 @@ private fun ResultList(
     installedInfo: ((Platform, projectId: String) -> InstalledMod?)? = null
 ) {
     val context = LocalContext.current
+    // Noctis: stable keys let the list reuse rows (and their loaded icons) while scrolling.
+    // APIs can repeat a project inside one page, and a repeated key would crash the list.
+    val rows = remember(data) {
+        data.distinctBy { (item, _) -> "${item.platform().name}:${item.platformId()}" }
+    }
     LazyColumn(
         modifier = modifier,
         state = state,
         contentPadding = contentPadding
     ) {
-        items(data) { (item, mcmod) ->
+        items(
+            items = rows,
+            key = { (item, _) -> "${item.platform().name}:${item.platformId()}" },
+            contentType = { "project" }
+        ) { (item, mcmod) ->
             val platform = remember(item) { item.platform() }
             val title = remember(item) { item.platformTitle() }
             val description = remember(item) { item.platformDescription() }
@@ -457,7 +466,12 @@ fun ResultProjectLayout(
     }
 
     Surface(
-        modifier = modifier.graphicsLayer(scaleY = scale.value, scaleX = scale.value),
+        // Noctis: the scale is read in the draw phase, so the entry animation does not
+        // recompose the whole row on every frame while scrolling
+        modifier = modifier.graphicsLayer {
+            scaleX = scale.value
+            scaleY = scale.value
+        },
         shape = shape,
         color = color,
         contentColor = contentColor,

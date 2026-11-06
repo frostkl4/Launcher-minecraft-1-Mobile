@@ -20,26 +20,39 @@
 package com.movtery.zalithlauncher.ui.screens.content
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyGridItemSpanScope
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.game.account.AccountsManager
 import com.movtery.zalithlauncher.game.version.installed.Version
 import com.movtery.zalithlauncher.game.version.installed.VersionsManager
-import com.movtery.zalithlauncher.noctis.ui.home.NoctisAccountPanel
-import com.movtery.zalithlauncher.noctis.ui.home.NoctisLibrary
-import com.movtery.zalithlauncher.noctis.ui.home.NoctisPlayCard
+import com.movtery.zalithlauncher.noctis.ui.home.NoctisHero
+import com.movtery.zalithlauncher.noctis.ui.home.NoctisInstanceCard
+import com.movtery.zalithlauncher.noctis.ui.home.NoctisLibraryHeader
+import com.movtery.zalithlauncher.noctis.ui.home.NoctisLibraryMessage
+import com.movtery.zalithlauncher.noctis.ui.home.NoctisLoaderFilters
+import com.movtery.zalithlauncher.noctis.ui.home.NoctisMemoryDialog
+import com.movtery.zalithlauncher.noctis.ui.home.formatNoctisMemory
+import com.movtery.zalithlauncher.noctis.ui.home.noctisCategory
+import com.movtery.zalithlauncher.noctis.ui.home.rememberEffectiveMemoryMb
 import com.movtery.zalithlauncher.ui.base.BaseScreen
 import com.movtery.zalithlauncher.ui.components.AnimatedDirection
 import com.movtery.zalithlauncher.ui.components.animated
@@ -48,17 +61,25 @@ import com.movtery.zalithlauncher.ui.guide.GuideKeys
 import com.movtery.zalithlauncher.ui.screens.NormalNavKey
 import com.movtery.zalithlauncher.viewmodel.ScreenBackStackViewModel
 
+/** Height of the "continue playing" card at the top of the home. */
+private val HeroHeight = 168.dp
+
+/** Cards are at least this wide; the grid adds columns as the screen gets wider. */
+private val CardMinWidth = 150.dp
+
 /**
- * Noctis home screen (landscape):
+ * Noctis home (version 1.0, landscape):
  *
  * ```
- * | rail | Play card (Play + selected instance | memory slider) | account  |
- * |      | Library: title, search, New instance                | + skin   |
- * |      | LazyRow of instance cards                           | preview  |
+ * | sidebar | top bar: "Home" · license line          [account chip] |
+ * |         | hero: selected instance, Play, memory, quick actions, skin |
+ * |         | Your instances: search · manage · New instance             |
+ * |         | loader filters                                             |
+ * |         | [card] [card] [card] [card]   ← rounded instance grid      |
  * ```
  *
- * The parameters are the same as the original Zalith home, so MainScreen and the
- * rest of the app keep working unchanged.
+ * Everything below the top bar is one lazy grid, so only the cards on screen are
+ * composed and the hero scrolls away when browsing a long library.
  */
 @Composable
 fun LauncherScreen(
@@ -68,6 +89,8 @@ fun LauncherScreen(
     @Suppress("UNUSED_PARAMETER") onQuickPlayServer: (Version?, String) -> Unit,
     @Suppress("UNUSED_PARAMETER") onOpenLink: (String) -> Unit,
     @Suppress("UNUSED_PARAMETER") startGuideOnce: (GuideKeys.Keys) -> Unit,
+    onOpenFolder: (Version) -> Unit = {},
+    onManageInstances: () -> Unit = {},
 ) {
     // The original first-run guide points at the old home layout, so it is not started here.
 
@@ -80,6 +103,24 @@ fun LauncherScreen(
         val isRefreshing by VersionsManager.isRefreshing.collectAsStateWithLifecycle()
         val account by AccountsManager.currentAccountFlow.collectAsStateWithLifecycle()
 
+        var query by rememberSaveable { mutableStateOf("") }
+        var category by rememberSaveable { mutableStateOf<String?>(null) }
+        var showMemoryDialog by remember { mutableStateOf(false) }
+
+        // Loader chips only list what the user has, in library order
+        val categories = remember(versions) { versions.map { it.noctisCategory() }.distinct() }
+        val activeCategory = category?.takeIf { it in categories }
+        val trimmed = query.trim()
+        val filtered = remember(versions, trimmed, activeCategory) {
+            versions.asSequence()
+                .filter { activeCategory == null || it.noctisCategory() == activeCategory }
+                .filter { trimmed.isEmpty() || it.getVersionName().contains(trimmed, ignoreCase = true) }
+                .distinctBy { it.getVersionName() }
+                .toList()
+        }
+        val currentName = currentVersion?.getVersionName()
+        val memoryLabel = formatNoctisMemory(rememberEffectiveMemoryMb(currentVersion))
+
         val toAccountManager: () -> Unit = {
             backStackViewModel.mainScreen.navigateTo(
                 screenKey = NormalNavKey.AccountManager(FirstLoginMenu.NONE)
@@ -88,65 +129,113 @@ fun LauncherScreen(
         val toNewInstance: () -> Unit = {
             backStackViewModel.navigateToDownload()
         }
+        val select: (Version) -> Unit = { version ->
+            if (version.getVersionName() != currentName) VersionsManager.saveVersion(version)
+        }
 
-        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-            // Right panel: about a quarter of the width, never too thin or too wide
-            val panelWidth = (maxWidth * 0.26f).coerceIn(208.dp, 300.dp)
-            // Play card grows a little on tall screens (tablets)
-            val playCardHeight = (maxHeight * 0.28f).coerceIn(92.dp, 132.dp)
+        val heroCtx = rememberAnimatedContext(isVisible = isVisible)
+        val libraryCtx = rememberAnimatedContext(isVisible = isVisible, delayMillis = 60)
+        val fullSpan: LazyGridItemSpanScope.() -> GridItemSpan = { GridItemSpan(maxLineSpan) }
 
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(12.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Column(
+        LazyVerticalGrid(
+            modifier = Modifier.fillMaxSize(),
+            state = rememberLazyGridState(),
+            columns = GridCells.Adaptive(minSize = CardMinWidth),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            item(key = "hero", span = fullSpan, contentType = "hero") {
+                NoctisHero(
                     modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight(),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    val playCtx = rememberAnimatedContext(isVisible = isVisible)
-                    NoctisPlayCard(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(playCardHeight)
-                            .animated(playCtx, from = AnimatedDirection.Top),
-                        version = currentVersion,
-                        isRefreshing = isRefreshing,
-                        onPlay = { onLaunchGame(null) },
-                        onOpenInstanceSettings = { version -> navigateToVersions(version) }
-                    )
-
-                    val libraryCtx = rememberAnimatedContext(isVisible = isVisible, delayMillis = 60)
-                    NoctisLibrary(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f)
-                            .animated(libraryCtx, from = AnimatedDirection.Bottom),
-                        versions = versions,
-                        currentVersion = currentVersion,
-                        isRefreshing = isRefreshing,
-                        onSelect = { version ->
-                            if (version != currentVersion) VersionsManager.saveVersion(version)
-                        },
-                        onOpenSettings = { version -> navigateToVersions(version) },
-                        onNewInstance = toNewInstance
-                    )
-                }
-
-                val panelCtx = rememberAnimatedContext(isVisible = isVisible, delayMillis = 120)
-                NoctisAccountPanel(
-                    modifier = Modifier
-                        .width(panelWidth)
-                        .fillMaxHeight()
-                        .animated(panelCtx, from = AnimatedDirection.Right),
+                        .fillMaxWidth()
+                        .height(HeroHeight)
+                        .animated(heroCtx, from = AnimatedDirection.Top),
+                    version = currentVersion,
+                    isRefreshing = isRefreshing,
                     account = account,
-                    onOpenAccounts = toAccountManager,
+                    memoryLabel = memoryLabel,
+                    onPlay = { onLaunchGame(null) },
+                    onOpenMemory = { showMemoryDialog = true },
+                    onInstanceSettings = navigateToVersions,
+                    onOpenFolder = onOpenFolder,
                     onChangeSkin = toAccountManager
                 )
             }
+
+            item(key = "header", span = fullSpan, contentType = "header") {
+                NoctisLibraryHeader(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .animated(libraryCtx, from = AnimatedDirection.Bottom),
+                    query = query,
+                    onQueryChange = { query = it },
+                    onManage = onManageInstances,
+                    onNewInstance = toNewInstance
+                )
+            }
+
+            if (categories.size > 1) {
+                item(key = "filters", span = fullSpan, contentType = "filters") {
+                    NoctisLoaderFilters(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .animated(libraryCtx, from = AnimatedDirection.Bottom),
+                        categories = categories,
+                        selected = activeCategory,
+                        onSelect = { category = it }
+                    )
+                }
+            }
+
+            when {
+                versions.isEmpty() && isRefreshing -> item(key = "message", span = fullSpan, contentType = "message") {
+                    NoctisLibraryMessage(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = stringResource(R.string.noctis_home_loading),
+                        showProgress = true
+                    )
+                }
+                versions.isEmpty() -> item(key = "message", span = fullSpan, contentType = "message") {
+                    NoctisLibraryMessage(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = stringResource(R.string.noctis_home_empty_library),
+                        actionText = stringResource(R.string.noctis_home_new_instance),
+                        onAction = toNewInstance
+                    )
+                }
+                filtered.isEmpty() -> item(key = "message", span = fullSpan, contentType = "message") {
+                    NoctisLibraryMessage(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = stringResource(R.string.noctis_home_no_results, trimmed)
+                    )
+                }
+                else -> items(
+                    items = filtered,
+                    key = { "instance:" + it.getVersionName() },
+                    contentType = { "instance" }
+                ) { version ->
+                    NoctisInstanceCard(
+                        modifier = Modifier.animateItem(),
+                        version = version,
+                        selected = version.getVersionName() == currentName,
+                        onSelect = { select(version) },
+                        onPlay = {
+                            select(version)
+                            onLaunchGame(version)
+                        },
+                        onSettings = { navigateToVersions(version) },
+                        onOpenFolder = { onOpenFolder(version) }
+                    )
+                }
+            }
+        }
+
+        if (showMemoryDialog) {
+            NoctisMemoryDialog(
+                version = currentVersion,
+                onDismiss = { showMemoryDialog = false }
+            )
         }
     }
 }

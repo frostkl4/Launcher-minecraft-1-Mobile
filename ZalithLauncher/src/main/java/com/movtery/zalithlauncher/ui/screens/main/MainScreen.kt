@@ -78,7 +78,13 @@ import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.coroutine.TaskSystem
 import com.movtery.zalithlauncher.noctis.ui.NoctisDestination
 import com.movtery.zalithlauncher.noctis.ui.NoctisRail
-import com.movtery.zalithlauncher.noctis.ui.NoctisSkyBackground
+import com.movtery.zalithlauncher.noctis.ui.NoctisTopBar
+import com.movtery.zalithlauncher.noctis.NoctisInfo
+import com.movtery.zalithlauncher.game.account.AccountsManager
+import com.movtery.zalithlauncher.ui.screens.content.FirstLoginMenu
+import com.movtery.zalithlauncher.BuildConfig
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import com.movtery.zalithlauncher.game.version.installed.Version
 import com.movtery.zalithlauncher.game.version.installed.VersionsManager
 import com.movtery.zalithlauncher.path.PathManager
@@ -164,37 +170,59 @@ fun MainScreen(
     val isBackgroundValid = LocalBackgroundViewModel.current?.isValid == true
     val launcherBackgroundOpacity = AllSettings.launcherBackgroundOpacity.state.toFloat() / 100f
 
+    // Noctis 1.0: solid deep-night background (the sky art lives in the home hero),
+    // or the user's own wallpaper with the chosen opacity
     val backgroundColor = if (isBackgroundValid) {
         backgroundColor().copy(alpha = launcherBackgroundOpacity)
     } else backgroundColor()
 
-    Box(modifier = Modifier.fillMaxSize()) {
-    // Noctis: when the user has no custom wallpaper, the night sky is the wallpaper
-    if (!isBackgroundValid) {
-        NoctisSkyBackground(modifier = Modifier.fillMaxSize())
+    val account by AccountsManager.currentAccountFlow.collectAsStateWithLifecycle()
+
+    /** Rail destinations replace each other instead of piling up on the back stack. */
+    val topLevelKeys = remember(screenBackStackModel) {
+        screenBackStackModel.clearBeforeNavKeys + listOf(
+            NormalNavKey.VersionsManager::class,
+            NormalNavKey.AccountManager::class
+        )
+    }
+    val toVersionsManager: () -> Unit = {
+        screenBackStackModel.mainScreen.removeAndNavigateTo(
+            removes = topLevelKeys,
+            screenKey = NormalNavKey.VersionsManager,
+            useClassEquality = true
+        )
+    }
+    val toAccountManager: () -> Unit = {
+        screenBackStackModel.mainScreen.removeAndNavigateTo(
+            removes = topLevelKeys,
+            screenKey = NormalNavKey.AccountManager(FirstLoginMenu.NONE),
+            useClassEquality = true
+        )
     }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = if (isBackgroundValid) backgroundColor else Color.Transparent,
+        color = backgroundColor,
         contentColor = onBackgroundColor()
     ) {
         val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
         val destination = when (mainScreenKey) {
             null, is NormalNavKey.LauncherMain -> NoctisDestination.Home
-            is NestedNavKey.Download -> NoctisDestination.Download
+            is NormalNavKey.VersionsManager -> NoctisDestination.Library
+            is NestedNavKey.Download -> NoctisDestination.Explore
+            is NormalNavKey.AccountManager -> NoctisDestination.Skins
             is NormalNavKey.Multiplayer -> NoctisDestination.Multiplayer
             is NestedNavKey.Settings -> NoctisDestination.Settings
             else -> NoctisDestination.Other
         }
 
-        // Noctis: navigation rail on the left instead of the original top bar,
-        // so the home screen gets the full height of the phone in landscape
+        // Noctis: sidebar on the left, so the content gets the full height of the phone in landscape
         Row(modifier = Modifier.fillMaxSize()) {
             NoctisRail(
                 current = destination,
                 isHome = inLauncherScreen,
                 hasTasks = !taskRunning && !isTaskMenuExpanded,
+                translucent = isBackgroundValid,
                 onBack = {
                     if (!inLauncherScreen) {
                         backDispatcher?.onBackPressed() ?: run {
@@ -202,33 +230,23 @@ fun MainScreen(
                         }
                     }
                 },
-                onHome = {
-                    if (!inLauncherScreen) toMainScreen()
-                },
-                onDownload = {
-                    if (destination != NoctisDestination.Download) screenBackStackModel.navigateToDownload()
-                },
-                onMultiplayer = {
-                    if (destination != NoctisDestination.Multiplayer) {
-                        screenBackStackModel.mainScreen.removeAndNavigateTo(
-                            removes = screenBackStackModel.clearBeforeNavKeys,
-                            screenKey = NormalNavKey.Multiplayer
-                        )
-                    }
-                },
-                onFiles = {
-                    eventViewModel.sendEvent(
-                        EventViewModel.Event.OpenFileManager(
-                            rootPath = PathManager.DIR_FILES_EXTERNAL.absolutePath
-                        )
-                    )
-                },
-                onSettings = {
-                    if (destination != NoctisDestination.Settings) {
-                        screenBackStackModel.mainScreen.removeAndNavigateTo(
-                            removes = screenBackStackModel.clearBeforeNavKeys,
-                            screenKey = screenBackStackModel.settingsScreen
-                        )
+                onNavigate = { target ->
+                    if (target != destination) {
+                        when (target) {
+                            NoctisDestination.Home -> toMainScreen()
+                            NoctisDestination.Library -> toVersionsManager()
+                            NoctisDestination.Explore -> screenBackStackModel.navigateToDownload()
+                            NoctisDestination.Skins -> toAccountManager()
+                            NoctisDestination.Multiplayer -> screenBackStackModel.mainScreen.removeAndNavigateTo(
+                                removes = topLevelKeys,
+                                screenKey = NormalNavKey.Multiplayer
+                            )
+                            NoctisDestination.Settings -> screenBackStackModel.mainScreen.removeAndNavigateTo(
+                                removes = topLevelKeys,
+                                screenKey = screenBackStackModel.settingsScreen
+                            )
+                            NoctisDestination.Other -> Unit
+                        }
                     }
                 },
                 onTasks = {
@@ -241,20 +259,22 @@ fun MainScreen(
                     .fillMaxHeight()
                     .weight(1f)
             ) {
-                // Sub-screens keep a slim title so the user knows where they are
-                AnimatedVisibility(
-                    visible = !inLauncherScreen,
-                    enter = fadeIn() + slideInVertically(initialOffsetY = { -it }),
-                    exit = fadeOut() + slideOutVertically(targetOffsetY = { -it })
+                NoctisTopBar(
+                    modifier = Modifier.fillMaxWidth(),
+                    account = account,
+                    onAccountClick = {
+                        if (destination != NoctisDestination.Skins) toAccountManager()
+                    }
                 ) {
-                    ScreenTitle(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(36.dp)
-                            .padding(horizontal = 16.dp),
-                        mainScreenKey = mainScreenKey,
-                        contentColor = onBackgroundColor()
-                    )
+                    if (inLauncherScreen) {
+                        HomeTitle()
+                    } else {
+                        ScreenTitle(
+                            modifier = Modifier.fillMaxWidth(),
+                            mainScreenKey = mainScreenKey,
+                            contentColor = onBackgroundColor()
+                        )
+                    }
                 }
 
                 Box(
@@ -267,6 +287,7 @@ fun MainScreen(
                             modifier = Modifier.fillMaxSize(),
                             screenBackStackModel = screenBackStackModel,
                             toMainScreen = toMainScreen,
+                            toVersionsManager = toVersionsManager,
                             eventViewModel = eventViewModel,
                             modpackImportViewModel = modpackImportViewModel,
                             modifyVersionViewModel = modifyVersionViewModel,
@@ -288,6 +309,29 @@ fun MainScreen(
             }
         }
     }
+}
+
+/**
+ * Home title with the notice required by Zalith Launcher 2's additional GPLv3 terms:
+ * modified versions must say they are unofficial on the main interface.
+ */
+@Composable
+private fun HomeTitle() {
+    Column {
+        Text(
+            text = stringResource(R.string.noctis_rail_home),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1
+        )
+        Text(
+            text = "${BuildKeys.LAUNCHER_NAME} ${BuildConfig.VERSION_NAME} · " +
+                    stringResource(R.string.noctis_unofficial_based_on, NoctisInfo.UPSTREAM_NAME),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 
@@ -330,6 +374,7 @@ private fun NavigationUI(
     modifier: Modifier = Modifier,
     screenBackStackModel: ScreenBackStackViewModel,
     toMainScreen: () -> Unit,
+    toVersionsManager: () -> Unit,
     eventViewModel: EventViewModel,
     modpackImportViewModel: ModpackImportViewModel,
     modifyVersionViewModel: ModifyVersionViewModel,
@@ -394,7 +439,15 @@ private fun NavigationUI(
                         },
                         startGuideOnce = { keys ->
                             eventViewModel.sendStartGuideOnce(keys)
-                        }
+                        },
+                        onOpenFolder = { version ->
+                            eventViewModel.sendEvent(
+                                EventViewModel.Event.OpenFileManager(
+                                    rootPath = version.getGameDir().absolutePath
+                                )
+                            )
+                        },
+                        onManageInstances = toVersionsManager
                     )
                 }
                 entry<NestedNavKey.Settings> { key ->

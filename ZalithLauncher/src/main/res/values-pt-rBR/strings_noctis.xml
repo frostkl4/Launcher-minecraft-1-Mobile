@@ -57,4 +57,20 @@
     <string name="noctis_settings_curseforge_key_label">Cole a chave aqui</string>
     <string name="noctis_settings_curseforge_key_get_title">Pegar uma chave grátis</string>
     <string name="noctis_settings_curseforge_key_get_summary">Abre o console.curseforge.com: entre, aceite os termos da API e crie uma chave (API key)</string>
+    <!-- Layout da versão 1.0: barra lateral, barra de cima, destaque e grade de instâncias -->
+    <string name="noctis_rail_library">Biblioteca</string>
+    <string name="noctis_rail_explore">Explorar</string>
+    <string name="noctis_rail_skins">Skins</string>
+    <string name="noctis_rail_multiplayer">Multiplayer</string>
+    <string name="noctis_home_continue">Continuar jogando</string>
+    <string name="noctis_home_your_instances">Suas instâncias</string>
+    <string name="noctis_home_manage">Gerenciar instâncias</string>
+    <string name="noctis_home_open_folder">Abrir pasta da instância</string>
+    <string name="noctis_home_play_instance">Jogar %1$s</string>
+    <string name="noctis_home_select">Selecionar</string>
+    <string name="noctis_home_filter_all">Todos</string>
+    <string name="noctis_home_vanilla">Vanilla</string>
+    <string name="noctis_home_memory_button">Memória: %1$s, toque para ajustar</string>
+    <string name="noctis_home_memory_title">Memória do jogo</string>
+    <string name="noctis_home_switch_account">Trocar de conta: %1$s</string>
 </resources>

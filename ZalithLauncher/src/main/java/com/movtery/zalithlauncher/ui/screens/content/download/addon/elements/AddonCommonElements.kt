@@ -31,7 +31,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -53,17 +52,12 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImagePainter
 import coil3.compose.rememberAsyncImagePainter
-import coil3.imageLoader
-import coil3.request.ImageRequest
-import coil3.request.crossfade
 import com.movtery.zalithlauncher.R
+import com.movtery.zalithlauncher.noctis.image.NoctisImageLoader
 import com.movtery.zalithlauncher.game.download.addon.platform.Platform
 import com.movtery.zalithlauncher.game.download.addon.platform.PlatformClasses
 import com.movtery.zalithlauncher.game.download.modpack.platform.PackPlatform
 import com.movtery.zalithlauncher.ui.components.ShimmerBox
-import com.movtery.zalithlauncher.utils.logging.Logger
-
-private const val TAG = "AddonCommonElements"
 
 /**
  * 本地已安装标识
@@ -231,22 +225,12 @@ fun AddonIcon(
     val density = LocalDensity.current
     val pxSize = with(density) { size.roundToPx() }
 
+    // Noctis: one sized request per icon, served from memory, then disk, then network.
+    // (The old extra "preload" enqueue started a second identical download for every icon.)
     val imageRequest = remember(iconUrl, pxSize) {
         iconUrl?.takeIf { it.isNotBlank() }?.let {
-            ImageRequest.Builder(context)
-                .data(it)
-                .size(pxSize) //固定大小
-                .listener(
-                    onError = { _, result -> Logger.warning(TAG, "Coil: error = ${result.throwable}") }
-                )
-                .crossfade(true)
-                .build()
+            NoctisImageLoader.iconRequest(context, it, pxSize)
         }
-    }
-
-    //预加载
-    LaunchedEffect(imageRequest) {
-        imageRequest?.let { context.imageLoader.enqueue(it) }
     }
 
     val painter = rememberAsyncImagePainter(
