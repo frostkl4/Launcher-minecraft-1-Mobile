@@ -112,9 +112,15 @@ jobs:
               echo "::error::Faltam os secrets NOCTIS_KEYSTORE_BASE64 e/ou NOCTIS_KEYSTORE_PASSWORD (Settings → Secrets and variables → Actions)."
               exit 1
             fi
-            # --ignore-garbage tolerates spaces and line breaks added when pasting on a phone
-            printf '%s' "$NOCTIS_KEYSTORE_BASE64" | base64 --decode --ignore-garbage > "$keystore"
-            password="$NOCTIS_KEYSTORE_PASSWORD"
+            # Keep only Base64 characters: spaces and line breaks added when pasting on a phone are dropped
+            clean=$(printf '%s' "$NOCTIS_KEYSTORE_BASE64" | tr -cd 'A-Za-z0-9+/=')
+            echo "NOCTIS_KEYSTORE_BASE64: ${#clean} caracteres Base64 (de ${#NOCTIS_KEYSTORE_BASE64} colados)."
+            if [ $(( ${#clean} % 4 )) -ne 0 ] || ! printf '%s' "$clean" | base64 --decode > "$keystore" 2>/dev/null; then
+              echo "::error::O secret NOCTIS_KEYSTORE_BASE64 está incompleto ou tem texto a mais (${#clean} caracteres Base64). Abra o arquivo NOCTIS_KEYSTORE_BASE64.txt, copie TUDO e cole de novo no secret."
+              exit 1
+            fi
+            password=$(printf '%s' "$NOCTIS_KEYSTORE_PASSWORD" | tr -d '[:space:]')
+            echo "NOCTIS_KEYSTORE_PASSWORD: ${#password} caracteres."
             if ! keytool -list -storetype PKCS12 -keystore "$keystore" -storepass "$password" -alias noctis >/dev/null 2>&1; then
               echo "::error::A chave não abriu: confira se os dois secrets foram colados inteiros e sem espaços."
               exit 1
