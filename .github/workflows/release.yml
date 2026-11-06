@@ -6,7 +6,7 @@
 #   - push or create a tag like v0.1.0 (also works when the tag is created from
 #     the "Draft a new release" page of GitHub), or
 #   - Actions → Release → Run workflow, and type the tag.
-#     "Only test the build" builds arm64 with a temporary key and publishes nothing.
+#     "Only test the build" builds both APKs with a temporary key and publishes nothing.
 #
 # Repository secrets needed (Settings → Secrets and variables → Actions):
 #   NOCTIS_KEYSTORE_BASE64    the release keystore (PKCS12) encoded in Base64
@@ -50,7 +50,7 @@ jobs:
       fail-fast: true
       matrix:
         # arm64: almost every phone from the last years. arm: older / 32-bit phones.
-        arch: ${{ fromJSON(inputs.test_only && '["arm64"]' || '["arm64", "arm"]') }}
+        arch: [arm64, arm]
 
     steps:
       - name: Check the version tag
