@@ -18,6 +18,7 @@
 
 package com.movtery.zalithlauncher.ui.screens.content.download.addon.search
 
+import com.movtery.zalithlauncher.game.download.addon.platform.curseforge.usableOrModrinth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import com.movtery.zalithlauncher.game.download.addon.platform.Platform
@@ -38,7 +39,8 @@ fun SearchResourcePackScreen(
     swapToDownload: (Platform, projectId: String, iconUrl: String?) -> Unit = { _, _, _ -> }
 ) {
     val initialPlatform = remember {
-        AllSettings.searchResourcePackPlatform.getValue()
+        //Noctis: without a CurseForge API key, start on Modrinth instead of an error page
+        AllSettings.searchResourcePackPlatform.getValue().usableOrModrinth()
     }
     SearchAddonScreen(
         mainScreenKey = mainScreenKey,

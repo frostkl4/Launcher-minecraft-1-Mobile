@@ -55,6 +55,7 @@ class CurseForgeSearcher(
         searchFilter: PlatformSearchFilter,
         platformClasses: PlatformClasses
     ): CurseForgeSearchResult {
+        requireCurseForgeApiKey(api)
         return httpGetJson(
             url = "$api/mods/search",
             parameters = searchFilter.toCurseForgeRequest(
@@ -65,6 +66,7 @@ class CurseForgeSearcher(
     }
 
     override suspend fun getProject(projectID: String): CurseForgeProject {
+        requireCurseForgeApiKey(api)
         val project = httpGetJson<CurseForgeProject>(
             url = "$api/mods/$projectID"
         )
@@ -79,6 +81,7 @@ class CurseForgeSearcher(
         projectID: String,
         fileID: String,
     ): CurseForgeVersion {
+        requireCurseForgeApiKey(api)
         return httpGetJson(
             url = "$api/mods/$projectID/files/$fileID"
         )
@@ -105,6 +108,7 @@ class CurseForgeSearcher(
         projectID: String,
         pageCallback: (chunk: Int, page: Int) -> Unit
     ): List<CurseForgeFile> {
+        requireCurseForgeApiKey(api)
         return getAllVersions(
             pageSize = 50,
             chunkSize = 20,

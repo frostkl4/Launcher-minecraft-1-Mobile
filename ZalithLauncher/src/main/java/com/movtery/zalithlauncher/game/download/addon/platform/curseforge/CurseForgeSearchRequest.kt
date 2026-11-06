@@ -24,6 +24,15 @@ import com.movtery.zalithlauncher.game.download.addon.platform.curseforge.models
 import com.movtery.zalithlauncher.game.download.addon.platform.curseforge.models.CurseForgeModLoader
 import io.ktor.http.Parameters
 
+/** Largest page CurseForge accepts in /mods/search. */
+const val CURSEFORGE_MAX_PAGE_SIZE = 50
+
+/**
+ * CurseForge only serves the first 10,000 results of any search
+ * (index + pageSize must be <= 10,000). Narrow the search to see the rest.
+ */
+const val CURSEFORGE_MAX_RESULT_WINDOW = 10_000
+
 /**
  * [CurseForge api](https://docs.curseforge.com/rest-api/?shell#search-mods)
  */
@@ -80,8 +89,11 @@ data class CurseForgeSearchRequest(
         }
         append("sortField", sortField.curseforge)
         append("sortOrder", sortOrder)
-        append("index", index.toString())
-        append("pageSize", pageSize.toString())
+        //Noctis: CurseForge rejects pageSize > 50 and any request where index + pageSize > 10,000
+        val safePageSize = pageSize.coerceIn(1, CURSEFORGE_MAX_PAGE_SIZE)
+        val safeIndex = index.coerceIn(0, CURSEFORGE_MAX_RESULT_WINDOW - safePageSize)
+        append("index", safeIndex.toString())
+        append("pageSize", safePageSize.toString())
     }
 
     /**

@@ -32,4 +32,22 @@
     <string name="noctis_home_no_account">No account</string>
     <string name="noctis_home_add_account">Add account</string>
     <string name="noctis_home_change_skin">Change skin</string>
+
+    <!-- CurseForge -->
+    <string name="noctis_curseforge_key_missing">CurseForge does not work in this build: it was compiled without an API key. Add the CURSEFORGE_API_KEY secret to the GitHub repository and build again. Modrinth works without a key.</string>
+    <string name="noctis_curseforge_key_rejected">CurseForge refused the API key (403). Check the CURSEFORGE_API_KEY secret in the GitHub repository.</string>
+
+    <!-- Offline capes -->
+    <string name="noctis_offline_cape">Cape</string>
+    <string name="noctis_offline_cape_title">Offline account cape</string>
+    <string name="noctis_offline_cape_note">You see this cape in game. Other players only see it if the server uses the same skin system.</string>
+    <string name="noctis_offline_cape_pick_file">Choose PNG image</string>
+    <string name="noctis_offline_cape_username">Player name</string>
+    <string name="noctis_offline_cape_from_elyby">Ely.by</string>
+    <string name="noctis_offline_cape_from_minecraftcapes">MinecraftCapes</string>
+    <string name="noctis_offline_cape_remove">Remove cape</string>
+    <string name="noctis_offline_cape_error_no_cape">This player has no cape on that service.</string>
+    <string name="noctis_offline_cape_error_not_found">Player not found on that service.</string>
+    <string name="noctis_offline_cape_error_invalid">Invalid image: a cape must be twice as wide as it is tall (e.g. 64×32).</string>
+    <string name="noctis_offline_cape_error_network">Could not connect. Check your internet and try again.</string>
 </resources>

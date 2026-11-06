@@ -18,6 +18,9 @@
 
 package com.movtery.zalithlauncher.ui.screens.content
 
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import com.movtery.zalithlauncher.game.account.wardrobe.applyOfflineCape
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -757,6 +760,7 @@ private fun AccountSkinOperation(
     accountCapes: Map<String, List<PlayerProfile.Cape>>,
     actions: AccountActions
 ) {
+    val capeScope = rememberCoroutineScope()
     when (accountSkinOperation) {
         is AccountSkinOperation.None -> {}
         is AccountSkinOperation.ChangeSkin -> {
@@ -801,6 +805,13 @@ private fun AccountSkinOperation(
                 },
                 onApplyCape = { cape ->
                     actions.onIntent(AccountManageIntent.ApplyMicrosoftCape(account, cape))
+                },
+                onApplyOfflineCape = { bytes ->
+                    //Noctis: save/remove the offline cape, then refresh every skin preview
+                    capeScope.launch {
+                        runCatching { applyOfflineCape(account, bytes) }
+                        AccountsManager.refreshWardrobe()
+                    }
                 }
             )
         }

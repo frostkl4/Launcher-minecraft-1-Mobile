@@ -127,6 +127,8 @@ import com.movtery.zalithlauncher.game.account.isLocalAccount
 import com.movtery.zalithlauncher.game.account.isMicrosoftAccount
 import com.movtery.zalithlauncher.game.account.isSkinChangeAllowed
 import com.movtery.zalithlauncher.game.account.wardrobe.EmptyCape
+import com.movtery.zalithlauncher.noctis.ui.OfflineCapeChange
+import com.movtery.zalithlauncher.noctis.ui.OfflineCapeDialog
 import com.movtery.zalithlauncher.game.account.wardrobe.SkinModelType
 import com.movtery.zalithlauncher.game.account.wardrobe.capeLocalRes
 import com.movtery.zalithlauncher.game.account.wardrobe.toArmModel
@@ -1415,9 +1417,14 @@ fun ChangeSkinDialog(
     onResetSkin: () -> Unit,
     onApplySkin: (File, SkinModelType) -> Unit,
     onApplyCape: (PlayerProfile.Cape) -> Unit,
-    onFetchCapes: () -> Unit
+    onFetchCapes: () -> Unit,
+    onApplyOfflineCape: (ByteArray?) -> Unit = {}
 ) {
     var showCapeSelector by remember { mutableStateOf(false) }
+
+    //Noctis: offline accounts can pick a cape (file, Ely.by, MinecraftCapes), saved on confirm
+    var offlineCapeChange by remember { mutableStateOf<OfflineCapeChange>(OfflineCapeChange.None) }
+    var showOfflineCapeDialog by remember { mutableStateOf(false) }
 
     var isFetchingCapes by remember { mutableStateOf(false) }
 
@@ -1439,7 +1446,19 @@ fun ChangeSkinDialog(
     }
 
     // 加载披风
-    val previewCape by produceState<ByteArray?>(null, currentCapeToLoad, availableCapes) {
+    val previewCape by produceState<ByteArray?>(null, currentCapeToLoad, availableCapes, offlineCapeChange) {
+        if (account.isLocalAccount()) {
+            value = when (val change = offlineCapeChange) {
+                is OfflineCapeChange.Set -> change.bytes
+                OfflineCapeChange.Remove -> null
+                OfflineCapeChange.None -> withContext(Dispatchers.IO) {
+                    account.getCapeFile().takeIf { it.exists() }?.let { file ->
+                        runCatching { file.readBytes() }.getOrNull()
+                    }
+                }
+            }
+            return@produceState
+        }
         if (!account.isMicrosoftAccount()) return@produceState
 
         value = withContext(Dispatchers.IO) {
@@ -1656,6 +1675,24 @@ fun ChangeSkinDialog(
                                 )
                             }
 
+                            //Noctis: cape for offline accounts
+                            if (account.isLocalAccount()) {
+                                InfoLayoutTextItem(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    title = stringResource(R.string.noctis_offline_cape),
+                                    icon = {
+                                        Icon(
+                                            modifier = Modifier.size(22.dp),
+                                            painter = painterResource(R.drawable.ic_styler),
+                                            contentDescription = null
+                                        )
+                                    },
+                                    onClick = {
+                                        showOfflineCapeDialog = true
+                                    }
+                                )
+                            }
+
                             //离线账号重置皮肤
                             if (account.isLocalAccount() && account.hasSkinFile && skinState != ChangeSkin.ResetSkin) {
                                 InfoLayoutTextItem(
@@ -1689,7 +1726,8 @@ fun ChangeSkinDialog(
 
                         Button(
                             modifier = Modifier.weight(1f),
-                            enabled = skinState != ChangeSkin.None || capeState != ChangeCape.None,
+                            enabled = skinState != ChangeSkin.None || capeState != ChangeCape.None ||
+                                    offlineCapeChange != OfflineCapeChange.None,
                             onClick = {
                                 when (skinState) {
                                     is ChangeSkin.ChangeSkinData -> {
@@ -1707,6 +1745,12 @@ fun ChangeSkinDialog(
                                     onApplyCape(capeState.cape)
                                 }
 
+                                when (val change = offlineCapeChange) {
+                                    is OfflineCapeChange.Set -> onApplyOfflineCape(change.bytes)
+                                    OfflineCapeChange.Remove -> onApplyOfflineCape(null)
+                                    OfflineCapeChange.None -> {}
+                                }
+
                                 onDismissRequest()
                             }
                         ) {
@@ -1716,6 +1760,22 @@ fun ChangeSkinDialog(
                 }
             }
         }
+    }
+
+    if (showOfflineCapeDialog) {
+        OfflineCapeDialog(
+            account = account,
+            hasCape = when (offlineCapeChange) {
+                is OfflineCapeChange.Set -> true
+                OfflineCapeChange.Remove -> false
+                OfflineCapeChange.None -> account.getCapeFile().exists()
+            },
+            onResult = { change ->
+                offlineCapeChange = change
+                showOfflineCapeDialog = false
+            },
+            onDismiss = { showOfflineCapeDialog = false }
+        )
     }
 
     if (showCapeSelector) {

@@ -22,6 +22,8 @@ import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.coroutine.Task
 import com.movtery.zalithlauncher.coroutine.TaskSystem
 import com.movtery.zalithlauncher.game.download.addon.platform.PlatformVersion
+import com.movtery.zalithlauncher.game.download.addon.platform.curseforge.CurseForgeApiKeyMissingException
+import com.movtery.zalithlauncher.game.download.addon.platform.curseforge.isCurseForgeKeyRejected
 import com.movtery.zalithlauncher.game.download.addon.platform.mcim.mapMCIMMirrorUrls
 import com.movtery.zalithlauncher.game.version.installed.Version
 import com.movtery.zalithlauncher.path.PathManager
@@ -178,6 +180,9 @@ private fun downloadSingleFile(
 }
 
 fun mapExceptionToMessage(e: Throwable): AndroidStringText {
+    //Noctis: explain the CurseForge key problem instead of a bare "403 Forbidden"
+    if (e is CurseForgeApiKeyMissingException) return androidText(R.string.noctis_curseforge_key_missing)
+    if (e.isCurseForgeKeyRejected()) return androidText(R.string.noctis_curseforge_key_rejected)
     return when (e) {
         is HttpRequestTimeoutException -> androidText(R.string.error_timeout)
         is UnknownHostException, is UnresolvedAddressException -> androidText(R.string.error_network_unreachable)

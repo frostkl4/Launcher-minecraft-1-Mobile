@@ -184,7 +184,8 @@ class LaunchArgs(
         val argsList: MutableList<String> = ArrayList()
 
         if (account.isLocalAccount()) {
-            if (account.hasSkinFile) {
+            //Noctis: a cape alone is also a reason to start the local skin server
+            if (account.hasSkinFile || account.getCapeFile().exists()) {
                 //该离线账号拥有本地皮肤，启用离线yggdrasil服务器
                 offlineServer.start()
                 offlineServer.addCharacter(account)

@@ -48,14 +48,16 @@ class CurseForgeSearchResult(
             if (!data0.isApproved()) return@mapNotNull null
             data0 to classes.getTranslations()?.getInfoByCurseForgeId(data0.slug)
         }
-        val pageSize = pagination.pageSize
+        val pageSize = pagination.pageSize.coerceAtLeast(1)
+        //Noctis: pages past the 10,000th result cannot be requested, so do not offer them
+        val reachableCount = minOf(pagination.totalCount, CURSEFORGE_MAX_RESULT_WINDOW.toLong())
         val isLastPage = pagination.resultCount < pageSize ||
-                (pagination.index + pagination.resultCount) >= pagination.totalCount
+                (pagination.index + pagination.resultCount) >= reachableCount
 
         return AddonPage(
             pageNumber = pagination.index / pageSize + 1,
             pageIndex = pagination.index,
-            totalPage = ((pagination.totalCount + pageSize - 1) / pageSize).toInt(),
+            totalPage = ((reachableCount + pageSize - 1) / pageSize).toInt(),
             isLastPage = isLastPage,
             data = mcmodData
         )

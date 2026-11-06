@@ -11,6 +11,8 @@ Launcher de **Minecraft: Java Edition para Android**, com tema noturno, layout p
 - **Barra lateral de navegação** no lugar da barra superior (sobra mais altura para o conteúdo).
 - **Tema Noctis**: roxo noturno por padrão, céu com lua e montanhas desenhado em vetor (sem imagem pesada na memória).
 - **Ícone novo** em pixel art (lua crescente).
+- **Capas para contas offline**: arquivo PNG, Ely.by ou MinecraftCapes (servidas ao jogo pelo servidor de skins local + authlib-injector).
+- Busca do CurseForge respeita o limite da API (só os primeiros 10.000 resultados de cada busca) e avisa quando falta a chave de API; sem a chave, as abas de download abrem no Modrinth.
 - Não oferece as atualizações do Zalith oficial (é outro app).
 
 O motor do jogo (PojavLauncher/LWJGL/renderizadores), contas, downloads (Modrinth/CurseForge), mods e controles continuam sendo os do Zalith Launcher 2.
@@ -32,7 +34,7 @@ Para outras arquiteturas, edite a lista `archs` em `.github/workflows/push_ci.ym
 | `OAUTH_CLIENT_ID` | Login com conta Microsoft (ID de um app registrado no Azure) |
 | `CURSEFORGE_API_KEY` | Busca e downloads do CurseForge |
 
-Sem elas o app compila, mas o login Microsoft e o CurseForge não funcionam.
+Sem elas o app compila, mas o login Microsoft e o CurseForge não funcionam (o CurseForge responde "403 API Key missing").
 
 ## Licença
 
