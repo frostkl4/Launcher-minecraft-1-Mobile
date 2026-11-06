@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Moonlight Launcher pixel icon (memory), drawn on a 12x12 grid. -->
+<!-- Moonlight Launcher icon (memory): 24 dp line icon, 2 dp rounded strokes. Original drawing. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
-    android:viewportWidth="12"
-    android:viewportHeight="12">
+    android:viewportWidth="24"
+    android:viewportHeight="24">
     <path
-        android:fillColor="#FFFFFFFF"
-        android:pathData="M6 0h3v1h-3zM5 1h3v1h-3zM4 2h3v1h-3zM3 3h3v1h-3zM2 4h7v1h-7zM5 5h3v1h-3zM4 6h3v1h-3zM3 7h3v1h-3zM2 8h3v1h-3zM1 9h3v1h-3zM1 10h2v1h-2z" />
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M13 3L5.5 13.5H12L11 21l7.5 -10.5H12z" />
 </vector>

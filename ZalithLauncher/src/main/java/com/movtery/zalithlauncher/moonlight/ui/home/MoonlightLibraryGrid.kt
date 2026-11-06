@@ -364,7 +364,7 @@ fun MoonlightInstanceCard(
                     .height(92.dp)
                     .clip(CoverShape)
             ) {
-                InstanceCoverArt(
+                MoonlightCoverArt(
                     modifier = Modifier.fillMaxSize(),
                     seed = name
                 )
@@ -524,7 +524,7 @@ private const val COVER_COLUMNS = 32
  * beyond a couple of paths. Rebuilt only when the size or the name changes.
  */
 @Composable
-private fun InstanceCoverArt(
+fun MoonlightCoverArt(
     seed: String,
     modifier: Modifier = Modifier,
 ) {

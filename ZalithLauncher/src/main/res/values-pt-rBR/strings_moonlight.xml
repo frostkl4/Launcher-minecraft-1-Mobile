@@ -119,4 +119,32 @@
     <string name="moonlight_install_progress">Instalando…</string>
     <string name="moonlight_install_cancel">Cancelar</string>
     <string name="moonlight_install_close">Fechar</string>
+    <!-- Página do projeto -->
+    <string name="moonlight_project_tab_description">Descrição</string>
+    <string name="moonlight_project_tab_gallery">Galeria</string>
+    <string name="moonlight_project_tab_versions">Versões</string>
+    <string name="moonlight_project_tab_dependencies">Dependências</string>
+    <string name="moonlight_project_install">Instalar</string>
+    <string name="moonlight_project_install_in">Instalar em</string>
+    <string name="moonlight_project_version">Versão</string>
+    <string name="moonlight_project_version_auto">Compatível mais recente (automática)</string>
+    <string name="moonlight_project_includes_dependency">Inclui %1$s (dependência)</string>
+    <string name="moonlight_project_no_compatible">Nenhuma versão para %1$s. Veja todas na aba Versões.</string>
+    <string name="moonlight_project_no_instance">Crie uma instância para instalar</string>
+    <string name="moonlight_project_loading_versions">Carregando versões…</string>
+    <string name="moonlight_project_downloading">Baixando… %1$d%%</string>
+    <string name="moonlight_project_installing">Instalando…</string>
+    <string name="moonlight_project_installed">Instalado</string>
+    <string name="moonlight_project_install_modpack">Instalar modpack</string>
+    <string name="moonlight_project_no_gallery">Este projeto não tem imagens</string>
+    <string name="moonlight_project_no_dependencies">Esta versão não depende de outros projetos</string>
+    <string name="moonlight_project_dependencies_loading">Procurando dependências…</string>
+    <string name="moonlight_project_required">Obrigatória</string>
+    <string name="moonlight_project_optional">Opcional</string>
+    <string name="moonlight_project_downloads">%1$s downloads</string>
+    <string name="moonlight_project_full_description">A descrição completa, com imagens, fica na página do projeto:</string>
+    <string name="moonlight_project_selected_instance">Também vira a instância selecionada</string>
+    <string name="moonlight_store_search_mods_for">Buscar mods para %1$s</string>
+    <string name="moonlight_store_sort">Ordenar</string>
+    <string name="moonlight_store_remove_filter">Remover filtro %1$s</string>
 </resources>

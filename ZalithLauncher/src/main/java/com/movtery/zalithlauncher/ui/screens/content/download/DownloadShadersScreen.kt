@@ -33,6 +33,8 @@ import androidx.navigation3.runtime.entryProvider
 import com.movtery.zalithlauncher.game.download.addon.downloadDependenciesForVersions
 import com.movtery.zalithlauncher.game.download.addon.downloadSingleForVersions
 import com.movtery.zalithlauncher.game.download.addon.platform.PlatformClasses
+import com.movtery.zalithlauncher.ui.screens.content.download.addon.elements.requiredRequests
+import com.movtery.zalithlauncher.game.version.installed.VersionsManager
 import com.movtery.zalithlauncher.ui.screens.NestedNavDisplay
 import com.movtery.zalithlauncher.ui.screens.NestedNavKey
 import com.movtery.zalithlauncher.ui.screens.NormalNavKey
@@ -124,6 +126,20 @@ fun DownloadShadersScreen(
                         currentKey = downloadShadersScreenKey,
                         key = addonKey,
                         eventViewModel = eventViewModel,
+                        onQuickInstall = { classes, version, deps ->
+                            // Moonlight: one tap from the project page installs into the selected instance
+                            val target = VersionsManager.currentVersion.value
+                            operation = when {
+                                target == null -> DownloadSingleOperation.SelectVersion(classes, version, deps)
+                                isUsingMobileData(context) -> DownloadSingleOperation.WarningForMobileData(classes, version, deps)
+                                else -> DownloadSingleOperation.Install(
+                                    classes = classes,
+                                    version = version,
+                                    versions = listOf(target),
+                                    dependencies = deps.requiredRequests(classes)
+                                )
+                            }
+                        },
                         onItemClicked = { classes, version, _, deps ->
                             operation = if (isUsingMobileData(context)) {
                                 DownloadSingleOperation.WarningForMobileData(classes, version, deps)

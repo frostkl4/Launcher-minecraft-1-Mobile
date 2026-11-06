@@ -119,4 +119,32 @@
     <string name="moonlight_install_progress">Installing…</string>
     <string name="moonlight_install_cancel">Cancel</string>
     <string name="moonlight_install_close">Close</string>
+    <!-- Project page -->
+    <string name="moonlight_project_tab_description">Description</string>
+    <string name="moonlight_project_tab_gallery">Gallery</string>
+    <string name="moonlight_project_tab_versions">Versions</string>
+    <string name="moonlight_project_tab_dependencies">Dependencies</string>
+    <string name="moonlight_project_install">Install</string>
+    <string name="moonlight_project_install_in">Install in</string>
+    <string name="moonlight_project_version">Version</string>
+    <string name="moonlight_project_version_auto">Newest compatible (automatic)</string>
+    <string name="moonlight_project_includes_dependency">Includes %1$s (dependency)</string>
+    <string name="moonlight_project_no_compatible">No version for %1$s. See all of them in the Versions tab.</string>
+    <string name="moonlight_project_no_instance">Create an instance to install this</string>
+    <string name="moonlight_project_loading_versions">Loading versions…</string>
+    <string name="moonlight_project_downloading">Downloading… %1$d%%</string>
+    <string name="moonlight_project_installing">Installing…</string>
+    <string name="moonlight_project_installed">Installed</string>
+    <string name="moonlight_project_install_modpack">Install modpack</string>
+    <string name="moonlight_project_no_gallery">This project has no images</string>
+    <string name="moonlight_project_no_dependencies">This version does not need other projects</string>
+    <string name="moonlight_project_dependencies_loading">Looking up dependencies…</string>
+    <string name="moonlight_project_required">Required</string>
+    <string name="moonlight_project_optional">Optional</string>
+    <string name="moonlight_project_downloads">%1$s downloads</string>
+    <string name="moonlight_project_full_description">The full description, with images, is on the project page:</string>
+    <string name="moonlight_project_selected_instance">Also becomes the selected instance</string>
+    <string name="moonlight_store_search_mods_for">Search mods for %1$s</string>
+    <string name="moonlight_store_sort">Sort</string>
+    <string name="moonlight_store_remove_filter">Remove filter %1$s</string>
 </resources>

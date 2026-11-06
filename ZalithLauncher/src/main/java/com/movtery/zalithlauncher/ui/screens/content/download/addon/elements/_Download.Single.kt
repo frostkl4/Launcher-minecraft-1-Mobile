@@ -558,6 +558,29 @@ private fun LazyListScope.dependencyLayout(
 private fun DependencyEntry.isInstallable(): Boolean = project != null
 
 /**
+ * Moonlight: required dependencies to download with a one-tap install
+ * (the same ones the download dialog checks by default: found on the platform
+ * and not already installed).
+ */
+fun List<DependencyEntry>.requiredRequests(
+    classes: PlatformClasses,
+    installedProjects: Map<Platform, Set<String>> = emptyMap()
+): List<DependencyRequest> = filter { entry ->
+    entry.dependency.type == PlatformDependencyType.REQUIRED &&
+            entry.isInstallable() &&
+            !entry.isModInstalled(installedProjects, classes)
+}.mapNotNull { entry ->
+    val project = entry.project ?: return@mapNotNull null
+    DependencyRequest(
+        platform = entry.dependency.platform,
+        projectId = project.platformId(),
+        versionId = entry.dependency.versionId,
+        classes = project.platformClasses(classes),
+        projectTitle = project.platformTitle()
+    )
+}
+
+/**
  * 该依赖是否为本地已安装的模组项目
  */
 private fun DependencyEntry.isModInstalled(

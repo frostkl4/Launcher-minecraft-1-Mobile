@@ -50,7 +50,10 @@ import com.movtery.zalithlauncher.moonlight.ui.store.MoonlightPillDivider
 import com.movtery.zalithlauncher.moonlight.ui.store.MoonlightPlatformToggle
 import com.movtery.zalithlauncher.moonlight.ui.store.MoonlightProjectCard
 import com.movtery.zalithlauncher.moonlight.ui.store.MoonlightProjectCardSkeleton
+import com.movtery.zalithlauncher.moonlight.ui.store.MoonlightProjectRow
+import com.movtery.zalithlauncher.moonlight.ui.store.MoonlightProjectRowSkeleton
 import com.movtery.zalithlauncher.moonlight.ui.store.MoonlightSearchBar
+import com.movtery.zalithlauncher.moonlight.ui.store.MoonlightSortButton
 import com.movtery.zalithlauncher.ui.AndroidStringText
 import com.movtery.zalithlauncher.ui.androidText
 import com.movtery.zalithlauncher.ui.components.ScalingLabel
@@ -116,13 +119,14 @@ private const val TAG = "SearchAddonScreen"
  */
 private class SearchScreenViewModel(
     initialPlatform: Platform,
-    private val platformClasses: PlatformClasses
+    private val platformClasses: PlatformClasses,
+    initialFilter: PlatformSearchFilter = PlatformSearchFilter()
 ): ViewModel() {
     var searchResult by mutableStateOf<SearchAddonState>(SearchAddonState.Searching)
     val pages = mutableStateListOf<AddonPage?>()
 
     var searchPlatform by mutableStateOf(initialPlatform)
-    var searchFilter by mutableStateOf(PlatformSearchFilter())
+    var searchFilter by mutableStateOf(initialFilter)
 
     private val _searchedMcMods = MutableStateFlow<List<AddonProjectInfo>>(emptyList())
     /** 搜索得到的所有 MCMOD 项目 */
@@ -245,7 +249,7 @@ private class SearchScreenViewModel(
     init {
         //初始化后，执行一次搜索
         search()
-        refreshVerSuggestions("")
+        refreshVerSuggestions(searchFilter.gameVersion)
         viewModelScope.launch {
             runCatching {
                 MinecraftVersions.refreshVersions(force = false)
@@ -265,13 +269,14 @@ private class SearchScreenViewModel(
 private fun rememberSearchAddonViewModel(
     navKey: TitledNavKey,
     initialPlatform: Platform,
-    platformClasses: PlatformClasses
+    platformClasses: PlatformClasses,
+    initialFilter: (Platform) -> PlatformSearchFilter
 ): SearchScreenViewModel {
     val screenKey = navKey.toString()
     return viewModel(
         key = "${screenKey}_search"
     ) {
-        SearchScreenViewModel(initialPlatform, platformClasses)
+        SearchScreenViewModel(initialPlatform, platformClasses, initialFilter(initialPlatform))
     }
 }
 
@@ -291,6 +296,7 @@ private fun rememberSearchAddonViewModel(
  * @param swapToDownload 跳转到下载详情页
  * @param installedInfo 查询项目本地是否已安装，键为平台与平台项目ID
  * @param extraFilter 额外的过滤器UI
+ * @param initialFilter filters applied on the first search (e.g. the selected instance's loader and version)
  */
 @Composable
 fun SearchAddonScreen(
@@ -309,13 +315,17 @@ fun SearchAddonScreen(
     mapCategories: (Platform, String) -> PlatformFilterCode?,
     swapToDownload: (Platform, projectId: String, iconUrl: String?) -> Unit = { _, _, _ -> },
     installedInfo: ((Platform, projectId: String) -> InstalledMod?)? = null,
-    extraFilter: (LazyListScope.() -> Unit)? = null
+    extraFilter: (LazyListScope.() -> Unit)? = null,
+    initialFilter: (Platform) -> PlatformSearchFilter = { PlatformSearchFilter() }
 ) {
     val viewModel: SearchScreenViewModel = rememberSearchAddonViewModel(
         navKey = screenKey,
         initialPlatform = initialPlatform,
-        platformClasses = platformClasses
+        platformClasses = platformClasses,
+        initialFilter = initialFilter
     )
+    // Modpacks keep the card grid; everything else is a list, like a store
+    val listLayout = platformClasses != PlatformClasses.MOD_PACK
 
     //跟随平台自动变更的内容
     val categories = remember(viewModel.searchPlatform) {
@@ -369,10 +379,10 @@ fun SearchAddonScreen(
                 LazyVerticalGrid(
                     modifier = Modifier.fillMaxSize(),
                     state = gridState,
-                    columns = GridCells.Adaptive(minSize = 228.dp),
+                    columns = if (listLayout) GridCells.Adaptive(minSize = 560.dp) else GridCells.Adaptive(minSize = 228.dp),
                     contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(if (listLayout) 8.dp else 12.dp)
                 ) {
                     item(key = "search", span = fullSpan, contentType = "search") {
                         Row(
@@ -389,7 +399,7 @@ fun SearchAddonScreen(
                                 value = filter.searchName,
                                 onValueChange = { viewModel.updateNameFilter(it) },
                                 onSearch = { viewModel.resetSearch() },
-                                placeholder = stringResource(platformClasses.searchHint())
+                                placeholder = searchPlaceholder(platformClasses, filter)
                             )
                             if (enablePlatform) {
                                 MoonlightPlatformToggle(
@@ -398,6 +408,11 @@ fun SearchAddonScreen(
                                     onSelect = changePlatform
                                 )
                             }
+                            MoonlightSortButton(
+                                modifier = Modifier.fillMaxHeight(),
+                                selected = filter.sortField,
+                                onSelect = { viewModel.researchWithFilter(filter.copy(sortField = it)) }
+                            )
                             MoonlightFilterButton(
                                 modifier = Modifier.fillMaxHeight(),
                                 activeCount = activeFilters,
@@ -424,7 +439,7 @@ fun SearchAddonScreen(
                     when (val state = viewModel.searchResult) {
                         is SearchAddonState.Searching -> {
                             items(count = 6, key = { "skeleton$it" }, contentType = { "skeleton" }) {
-                                MoonlightProjectCardSkeleton()
+                                if (listLayout) MoonlightProjectRowSkeleton() else MoonlightProjectCardSkeleton()
                             }
                         }
                         is SearchAddonState.Error -> {
@@ -485,21 +500,37 @@ fun SearchAddonScreen(
                                     .orEmpty()
                                 val isInstalled = installedInfo?.invoke(platform, item.platformId()) != null
                                 val open = { swapToDownload(platform, item.platformId(), iconUrl) }
-                                MoonlightProjectCard(
-                                    modifier = Modifier.animateItem(),
-                                    title = title,
-                                    description = item.platformDescription(),
-                                    iconUrl = iconUrl,
-                                    authors = item.platformAuthors(),
-                                    downloads = item.platformDownloadCount(),
-                                    follows = item.platformFollows(),
-                                    tags = categoryTags.take(1) + tags,
-                                    isInstalled = isInstalled,
-                                    onOpen = open,
-                                    // The project page lists the versions: the user picks the
-                                    // version and the instance there, nothing installs blindly
-                                    onInstall = open
-                                )
+                                // "Install" opens the project page: its side panel picks the instance
+                                // and the compatible version, so nothing installs blindly
+                                if (listLayout) {
+                                    MoonlightProjectRow(
+                                        modifier = Modifier.animateItem(),
+                                        title = title,
+                                        description = item.platformDescription(),
+                                        iconUrl = iconUrl,
+                                        authors = item.platformAuthors(),
+                                        downloads = item.platformDownloadCount(),
+                                        follows = item.platformFollows(),
+                                        tags = tags + categoryTags.take(2),
+                                        isInstalled = isInstalled,
+                                        onOpen = open,
+                                        onInstall = open
+                                    )
+                                } else {
+                                    MoonlightProjectCard(
+                                        modifier = Modifier.animateItem(),
+                                        title = title,
+                                        description = item.platformDescription(),
+                                        iconUrl = iconUrl,
+                                        authors = item.platformAuthors(),
+                                        downloads = item.platformDownloadCount(),
+                                        follows = item.platformFollows(),
+                                        tags = categoryTags.take(1) + tags,
+                                        isInstalled = isInstalled,
+                                        onOpen = open,
+                                        onInstall = open
+                                    )
+                                }
                             }
                             if (rows.isNotEmpty()) {
                                 item(key = "pager", span = fullSpan, contentType = "pager") {
@@ -632,6 +663,20 @@ private fun PlatformClasses.searchHint(): Int = when (this) {
     PlatformClasses.SHADERS -> R.string.moonlight_store_search_shaders
 }
 
+/** "Search mods for Fabric 1.20.1" when a loader or version filter is active. */
+@Composable
+private fun searchPlaceholder(classes: PlatformClasses, filter: PlatformSearchFilter): String {
+    val target = listOfNotNull(
+        filter.modloader?.getDisplayName(),
+        filter.gameVersion.takeIf { it.isNotBlank() }
+    ).joinToString(" ")
+    return if (classes == PlatformClasses.MOD && target.isNotEmpty()) {
+        stringResource(R.string.moonlight_store_search_mods_for, target)
+    } else {
+        stringResource(classes.searchHint())
+    }
+}
+
 /** Most used Minecraft versions, offered as one-tap pills. */
 private val QuickVersions = listOf("1.21.1", "1.20.1", "1.19.2", "1.18.2", "1.16.5")
 
@@ -677,6 +722,7 @@ private fun QuickFilters(
                 MoonlightPill(
                     label = loader.getDisplayName(),
                     selected = selected,
+                    removable = true,
                     onClick = { onFilter(filter.copy(modloader = if (selected) null else loader)) }
                 )
             }
@@ -687,6 +733,7 @@ private fun QuickFilters(
             MoonlightPill(
                 label = version,
                 selected = selected,
+                removable = true,
                 onClick = { onVersion(if (selected) "" else version) }
             )
         }
@@ -697,6 +744,7 @@ private fun QuickFilters(
                 MoonlightPill(
                     label = stringResource(category.getDisplayName()),
                     selected = selected,
+                    removable = true,
                     onClick = {
                         onFilter(
                             filter.copy(

@@ -23,11 +23,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import com.movtery.zalithlauncher.game.download.addon.platform.Platform
 import com.movtery.zalithlauncher.game.download.addon.platform.PlatformClasses
+import com.movtery.zalithlauncher.game.download.addon.platform.PlatformSearchFilter
 import com.movtery.zalithlauncher.game.download.addon.platform.curseforge.models.CurseForgeModCategory
 import com.movtery.zalithlauncher.game.download.addon.platform.curseforge.models.curseForgeModLoaderFilters
 import com.movtery.zalithlauncher.game.download.addon.platform.modrinth.models.ModrinthFeatures
 import com.movtery.zalithlauncher.game.download.addon.platform.modrinth.models.ModrinthModCategory
 import com.movtery.zalithlauncher.game.download.addon.platform.modrinth.models.modrinthModLoaderFilters
+import com.movtery.zalithlauncher.game.version.installed.VersionsManager
 import com.movtery.zalithlauncher.game.version.mod.InstalledMod
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.ui.screens.NormalNavKey
@@ -84,6 +86,24 @@ fun SearchModScreen(
             }
         },
         swapToDownload = swapToDownload,
-        installedInfo = installedInfo
+        installedInfo = installedInfo,
+        // Moonlight: start with the selected instance's loader and Minecraft version
+        initialFilter = { platform -> instanceFilter(platform) }
+    )
+}
+
+/** Loader and Minecraft version of the selected instance, as search filters. */
+private fun instanceFilter(platform: Platform): PlatformSearchFilter {
+    val info = VersionsManager.currentVersion.value?.getVersionInfo() ?: return PlatformSearchFilter()
+    val instanceLoaders = info.loaderInfos.map { it.loader.displayName }
+    val loaderFilters = when (platform) {
+        Platform.CURSEFORGE -> curseForgeModLoaderFilters
+        Platform.MODRINTH -> modrinthModLoaderFilters
+    }
+    return PlatformSearchFilter(
+        gameVersion = info.minecraftVersion,
+        modloader = loaderFilters.firstOrNull { label ->
+            instanceLoaders.any { it.equals(label.getDisplayName(), ignoreCase = true) }
+        }
     )
 }

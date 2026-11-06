@@ -51,6 +51,8 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -61,6 +63,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -80,6 +84,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.game.download.addon.platform.Platform
+import com.movtery.zalithlauncher.game.download.addon.platform.PlatformSortField
 import com.movtery.zalithlauncher.moonlight.ui.home.MoonlightTag
 import com.movtery.zalithlauncher.ui.components.ShimmerBox
 import com.movtery.zalithlauncher.ui.screens.content.download.addon.elements.AddonIcon
@@ -257,6 +262,7 @@ fun MoonlightPill(
     selected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    removable: Boolean = false,
 ) {
     val container by animateColorAsState(
         if (selected) MoonlightPalette.Violet.copy(alpha = 0.30f) else Color.Transparent,
@@ -277,7 +283,7 @@ fun MoonlightPill(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        if (selected) {
+        if (selected && !removable) {
             Icon(
                 modifier = Modifier.size(14.dp),
                 painter = painterResource(R.drawable.ic_check),
@@ -292,6 +298,78 @@ fun MoonlightPill(
             color = if (selected) MoonlightPalette.MoonGlow else MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1
         )
+        if (selected && removable) {
+            // Active filter: tap removes it
+            Icon(
+                modifier = Modifier.size(14.dp),
+                painter = painterResource(R.drawable.ic_close),
+                contentDescription = stringResource(R.string.moonlight_store_remove_filter, label),
+                tint = MoonlightPalette.MoonGlow
+            )
+        }
+    }
+}
+
+/** "Relevance ▾" sort selector. */
+@Composable
+fun MoonlightSortButton(
+    selected: PlatformSortField,
+    onSelect: (PlatformSortField) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val label = stringResource(R.string.moonlight_store_sort)
+    Box(modifier = modifier) {
+        Surface(
+            modifier = Modifier
+                .fillMaxHeight()
+                .semantics { contentDescription = label },
+            onClick = { expanded = true },
+            shape = PillShape,
+            color = MaterialTheme.colorScheme.surfaceContainer,
+            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .padding(start = 14.dp, end = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Text(
+                    text = stringResource(selected.getDisplayName()),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1
+                )
+                Icon(
+                    modifier = Modifier.size(20.dp),
+                    painter = painterResource(R.drawable.ic_arrow_drop_down_rounded),
+                    contentDescription = null
+                )
+            }
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            shape = RoundedCornerShape(14.dp)
+        ) {
+            PlatformSortField.entries.forEach { field ->
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            text = stringResource(field.getDisplayName()),
+                            fontWeight = if (field == selected) FontWeight.Bold else FontWeight.Normal
+                        )
+                    },
+                    onClick = {
+                        expanded = false
+                        if (field != selected) onSelect(field)
+                    }
+                )
+            }
+        }
     }
 }
 
@@ -459,6 +537,131 @@ private fun InstallPill(
                 fontWeight = FontWeight.Bold,
                 maxLines = 1
             )
+        }
+    }
+}
+
+/**
+ * Project row of the store list (mods, resource packs, shaders, worlds): official icon,
+ * name and author, one line of description, tags, downloads and Install.
+ */
+@Composable
+fun MoonlightProjectRow(
+    title: String,
+    description: String,
+    iconUrl: String?,
+    authors: List<String>?,
+    downloads: Long,
+    follows: Long?,
+    tags: List<String>,
+    isInstalled: Boolean,
+    onOpen: () -> Unit,
+    onInstall: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val context = LocalContext.current
+    val downloadsText = remember(downloads) { formatNumberByLocale(context, downloads) }
+    val followsText = remember(follows) { follows?.let { formatNumberByLocale(context, it) } }
+
+    Surface(
+        modifier = modifier,
+        onClick = onOpen,
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            AddonIcon(
+                modifier = Modifier.clip(RoundedCornerShape(12.dp)),
+                size = 52.dp,
+                iconUrl = iconUrl
+            )
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(3.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.Bottom
+                ) {
+                    Text(
+                        modifier = Modifier.weight(1f, fill = false),
+                        text = title,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    if (!authors.isNullOrEmpty()) {
+                        Text(
+                            text = stringResource(R.string.moonlight_store_by, authors.joinToString(", ")),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Row(
+                    modifier = Modifier.clip(RoundedCornerShape(8.dp)),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    tags.take(3).forEach { MoonlightTag(text = it) }
+                }
+            }
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Stat(icon = R.drawable.ic_download_2_filled, text = downloadsText)
+                if (followsText != null) Stat(icon = R.drawable.ic_star_filled, text = followsText)
+            }
+            InstallPill(
+                title = title,
+                isInstalled = isInstalled,
+                onClick = onInstall
+            )
+        }
+    }
+}
+
+/** Placeholder row shown while a page loads. */
+@Composable
+fun MoonlightProjectRowSkeleton(modifier: Modifier = Modifier) {
+    val shimmer = MaterialTheme.colorScheme.surfaceContainerHighest
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            ShimmerBox(Modifier.size(52.dp), color = shimmer, shape = RoundedCornerShape(12.dp))
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                ShimmerBox(Modifier.width(160.dp).height(14.dp), color = shimmer, shape = RoundedCornerShape(6.dp))
+                ShimmerBox(Modifier.fillMaxWidth(0.8f).height(10.dp), color = shimmer, shape = RoundedCornerShape(6.dp))
+                ShimmerBox(Modifier.width(110.dp).height(10.dp), color = shimmer, shape = RoundedCornerShape(6.dp))
+            }
+            ShimmerBox(Modifier.width(96.dp).height(36.dp), color = shimmer, shape = PillShape)
         }
     }
 }

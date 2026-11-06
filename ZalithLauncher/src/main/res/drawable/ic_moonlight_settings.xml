@@ -1,11 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Moonlight Launcher pixel icon (settings), drawn on a 12x12 grid. -->
+<!-- Moonlight Launcher icon (settings): 24 dp line icon, 2 dp rounded strokes. Original drawing. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
-    android:viewportWidth="12"
-    android:viewportHeight="12">
+    android:viewportWidth="24"
+    android:viewportHeight="24">
     <path
-        android:fillColor="#FFFFFFFF"
-        android:pathData="M5 0h2v1h-2zM2 1h1v1h-1zM4 1h4v1h-4zM9 1h1v1h-1zM1 2h10v1h-10zM2 3h3v1h-3zM7 3h3v1h-3zM1 4h3v1h-3zM8 4h3v1h-3zM0 5h4v1h-4zM8 5h4v1h-4zM0 6h4v1h-4zM8 6h4v1h-4zM1 7h3v1h-3zM8 7h3v1h-3zM2 8h3v1h-3zM7 8h3v1h-3zM1 9h10v1h-10zM2 10h1v1h-1zM4 10h4v1h-4zM9 10h1v1h-1zM5 11h2v1h-2z" />
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M4 7h9" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M19 7h1" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M18 7a2 2 0 1 1 -4 0a2 2 0 1 1 4 0z" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M4 17h1" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M11 17h9" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M10 17a2 2 0 1 1 -4 0a2 2 0 1 1 4 0z" />
 </vector>

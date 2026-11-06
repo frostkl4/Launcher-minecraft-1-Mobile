@@ -21,6 +21,7 @@ package com.movtery.zalithlauncher.ui.screens.content.download
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,6 +35,7 @@ import androidx.navigation3.runtime.entryProvider
 import com.movtery.zalithlauncher.game.download.addon.downloadDependenciesForVersions
 import com.movtery.zalithlauncher.game.download.addon.downloadSingleForVersions
 import com.movtery.zalithlauncher.game.download.addon.platform.PlatformClasses
+import com.movtery.zalithlauncher.ui.screens.content.download.addon.elements.requiredRequests
 import com.movtery.zalithlauncher.game.version.installed.VersionsManager
 import com.movtery.zalithlauncher.ui.screens.NestedNavDisplay
 import com.movtery.zalithlauncher.ui.screens.NestedNavKey
@@ -64,12 +66,14 @@ fun DownloadModScreen(
     val installedViewModel: DownloadModViewModel =
         viewModel(key = "download_mod_installed")
 
-    LaunchedEffect(stackTopKey) {
+    val selectedInstance by VersionsManager.currentVersion.collectAsStateWithLifecycle()
+
+    LaunchedEffect(stackTopKey, selectedInstance) {
         onCurrentKeyChange(stackTopKey)
         // 进入模组搜索页或项目详情页时，重新扫描当前版本已安装的模组
         // 同版本重复扫描会直接复用内存与持久缓存，且不会清除已有的标注数据
         if (stackTopKey is NormalNavKey.SearchMod || stackTopKey is NormalNavKey.DownloadAddon) {
-            installedViewModel.scan(VersionsManager.currentVersion.value)
+            installedViewModel.scan(selectedInstance)
         }
     }
 
@@ -146,6 +150,20 @@ fun DownloadModScreen(
                         key = addonKey,
                         eventViewModel = eventViewModel,
                         installedChecker = installedViewModel::checkVersion,
+                        onQuickInstall = { classes, version, deps ->
+                            // Moonlight: one tap from the project page installs into the selected instance
+                            val target = VersionsManager.currentVersion.value
+                            operation = when {
+                                target == null -> DownloadSingleOperation.SelectVersion(classes, version, deps)
+                                isUsingMobileData(context) -> DownloadSingleOperation.WarningForMobileData(classes, version, deps)
+                                else -> DownloadSingleOperation.Install(
+                                    classes = classes,
+                                    version = version,
+                                    versions = listOf(target),
+                                    dependencies = deps.requiredRequests(classes, installedProjects)
+                                )
+                            }
+                        },
                         onItemClicked = { classes, version, _, deps ->
                             operation = if (isUsingMobileData(context)) {
                                 DownloadSingleOperation.WarningForMobileData(classes, version, deps)
